@@ -1,0 +1,43 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-secondary);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 260px;
+  min-height: 100vh;
+}
+
+.main.collapsed {
+  margin-left: 72px;
+}
+
+.content {
+  flex: 1;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+}
+
+/* Container para páginas sem sidebar (ex: login) */
+.loginContainer {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+}
+
+@media (max-width: 1024px) {
+  .main {
+    margin-left: 0;
+  }
+  
+  .main.collapsed {
+    margin-left: 0;
+  }
+}

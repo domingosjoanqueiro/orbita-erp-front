@@ -1,0 +1,71 @@
+.card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.statCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.tableSkeleton {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.tableHeader {
+  display: grid;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-md);
+}
+
+.tableRow {
+  display: grid;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+}
+
+.tableHeader {
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+}
+
+.tableRow {
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+}
+
+@media (max-width: 640px) {
+  .tableHeader {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
+  }
+  
+  .tableRow {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) 0;
+  }
+}
