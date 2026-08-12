@@ -79,7 +79,14 @@
   align-items: center;
 }
 
+.helpText {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
 .errorMessage {
   font-size: 0.75rem;
   color: var(--error);
+  margin-top: 2px;
 }

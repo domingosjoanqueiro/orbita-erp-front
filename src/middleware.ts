@@ -24,7 +24,15 @@ export function middleware(request: NextRequest) {
                          pathname.startsWith('/users') ||
                          pathname.startsWith('/roles') ||
                          pathname.startsWith('/company/info')||
-                         pathname.startsWith('/academic/academic-years');
+                         pathname.startsWith('/academic/academic-years')||
+                         pathname.startsWith('/academic/academic-structure')||
+                         pathname.startsWith('/academic/program-settings')||
+                         pathname.startsWith('/academic/subjects')||
+                         pathname.startsWith('/academic/teachers')||
+                         pathname.startsWith('/academic/students')||
+                         pathname.startsWith('/academic/enrollments')||
+                         pathname.startsWith('/academic/grades')||
+                         pathname.startsWith('/academic/classes') ;
 
   // Tokens
   const platformToken = request.cookies.get(PLATFORM_TOKEN_KEY)?.value;

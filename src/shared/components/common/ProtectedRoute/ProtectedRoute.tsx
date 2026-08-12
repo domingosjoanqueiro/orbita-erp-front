@@ -3,20 +3,24 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/contexts/AuthContext';
+import { usePermission } from '@/shared/hooks/usePermission';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredPermissions?: string[];
   requiredRoles?: string[];
+  fallback?: React.ReactNode;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredPermissions = [],
   requiredRoles = [],
+  fallback,
 }) => {
   const router = useRouter();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { hasAllPermissions, hasAnyRole, hasRole } = usePermission();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -30,9 +34,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 
-        height: '100vh' 
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '1rem'
       }}>
-        Carregando...
+        <div>Carregando...</div>
       </div>
     );
   }
@@ -41,14 +47,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return null;
   }
 
-  // Verificar permissões
+  // Verificar permissões - usando o hook usePermission
   if (requiredPermissions.length > 0) {
-    const userPermissions = user?.role?.permissions || [];
-    const hasAllPermissions = requiredPermissions.every(permission =>
-      userPermissions.some(p => p.name === permission)
-    );
-
-    if (!hasAllPermissions) {
+    const hasAccess = hasAllPermissions(requiredPermissions);
+    if (!hasAccess) {
+      if (fallback) {
+        return <>{fallback}</>;
+      }
       return (
         <div style={{ 
           display: 'flex', 
@@ -58,19 +63,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           flexDirection: 'column',
           gap: '1rem'
         }}>
-          <h2>Sem permissão</h2>
-          <p>Você não tem permissão para acessar esta página</p>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '1.5rem', fontWeight: 600 }}>
+            Sem permissão
+          </h2>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            Você não tem permissão para acessar esta página
+          </p>
         </div>
       );
     }
   }
 
-  // Verificar roles
+  // Verificar roles - usando o hook usePermission
   if (requiredRoles.length > 0) {
-    const userRole = user?.role?.name;
-    const hasRequiredRole = requiredRoles.includes(userRole || '');
-
-    if (!hasRequiredRole) {
+    const hasAccess = hasAnyRole(requiredRoles);
+    if (!hasAccess) {
+      if (fallback) {
+        return <>{fallback}</>;
+      }
       return (
         <div style={{ 
           display: 'flex', 
@@ -80,8 +90,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           flexDirection: 'column',
           gap: '1rem'
         }}>
-          <h2>Acesso negado</h2>
-          <p>Você não tem permissão para acessar esta página</p>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '1.5rem', fontWeight: 600 }}>
+            Acesso negado
+          </h2>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            Você não tem permissão para acessar esta página
+          </p>
         </div>
       );
     }

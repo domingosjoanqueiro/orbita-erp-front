@@ -126,12 +126,14 @@ const mainMenuItems: MenuItem[] = [
 ];
 
 // Acadêmico - Configuração
+// Acadêmico - Configuração
 const academicConfigItems: MenuItem[] = [
   { icon: <CalendarDays size={18} />, label: 'Anos Letivos', href: '/academic/academic-years', companyOnly: true },
-  { icon: <Layers size={18} />, label: 'Níveis e Programas', href: '/academic-structure', companyOnly: true },
-  { icon: <GraduationCap size={18} />, label: 'Classes', href: '/grades', companyOnly: true },
-  { icon: <School size={18} />, label: 'Turmas', href: '/classes', companyOnly: true },
-  { icon: <BookMarked size={18} />, label: 'Disciplinas', href: '/subjects', companyOnly: true },
+  { icon: <Layers size={18} />, label: 'Níveis e Programas', href: '/academic/academic-structure', companyOnly: true },
+  { icon: <Settings size={18} />, label: 'Config. Académica', href: '/academic/program-settings', companyOnly: true },
+  { icon: <GraduationCap size={18} />, label: 'Classes', href: '/academic/grades', companyOnly: true },
+  { icon: <School size={18} />, label: 'Turmas', href: '/academic/classes', companyOnly: true },
+  { icon: <BookMarked size={18} />, label: 'Disciplinas', href: '/academic/subjects', companyOnly: true },
 ];
 
 // Acadêmico - Gestão

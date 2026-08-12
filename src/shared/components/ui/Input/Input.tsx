@@ -7,13 +7,23 @@ import styles from './Input.module.css';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: FormError;
+  helpText?: string;
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, fullWidth, leftIcon, rightIcon, className = '', ...props }, ref) => {
+  ({ 
+    label, 
+    error, 
+    helpText,
+    fullWidth, 
+    leftIcon, 
+    rightIcon, 
+    className = '', 
+    ...props 
+  }, ref) => {
     const errorMessage = getErrorMessage(error);
 
     const inputClasses = [
@@ -33,6 +43,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input ref={ref} className={inputClasses} {...props} />
           {rightIcon && <span className={styles.rightIcon}>{rightIcon}</span>}
         </div>
+        {helpText && !errorMessage && (
+          <span className={styles.helpText}>{helpText}</span>
+        )}
         {errorMessage && <span className={styles.errorMessage}>{errorMessage}</span>}
       </div>
     );

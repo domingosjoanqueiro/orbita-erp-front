@@ -1,4 +1,5 @@
-import { apiClient } from '@/shared/services/api/client';
+import { ApiService } from '@/shared/services/api/api.service';
+import { extractApiData, extractApiList } from '@/shared/utils/api.utils';
 import type { 
   Student, 
   CreateStudentDTO, 
@@ -6,36 +7,59 @@ import type {
   StudentFilters 
 } from '../types/student.types';
 
-class StudentService {
+class StudentService extends ApiService {
   private basePath = '/students';
 
-  async getAll(filters?: StudentFilters) {
-    const { data } = await apiClient.get(this.basePath, { params: filters });
-    return data;
+  constructor() {
+    super('company');
   }
 
-  async getById(id: string) {
-    const { data } = await apiClient.get(`${this.basePath}/${id}`);
-    return data;
+  async getAll(filters?: StudentFilters): Promise<{ 
+    data: Student[]; 
+    total: number; 
+    page: number; 
+    limit: number;
+    totalPages: number;
+  }> {
+    const response = await this.get<any>(`${this.basePath}`, { params: filters });
+    const extracted = extractApiList<Student>(response);
+    return {
+      data: extracted.data,
+      total: extracted.total,
+      page: extracted.page || filters?.page || 1,
+      limit: extracted.limit || filters?.limit || 10,
+      totalPages: extracted.totalPages || 1,
+    };
   }
 
-  async create(studentData: CreateStudentDTO) {
-    const { data } = await apiClient.post(this.basePath, studentData);
-    return data;
+  async getByUuid(uuid: string): Promise<Student> {
+    const response = await this.get<any>(`${this.basePath}/${uuid}`);
+    return extractApiData<Student>(response);
   }
 
-  async update(id: string, studentData: UpdateStudentDTO) {
-    const { data } = await apiClient.patch(`${this.basePath}/${id}`, studentData);
-    return data;
+  async create(data: CreateStudentDTO): Promise<Student> {
+    const response = await this.post<any>(`${this.basePath}`, data);
+    return extractApiData<Student>(response);
   }
 
-  async delete(id: string) {
-    await apiClient.delete(`${this.basePath}/${id}`);
+  async update(uuid: string, data: UpdateStudentDTO): Promise<Student> {
+    const response = await this.patch<any>(`${this.basePath}/${uuid}`, data);
+    return extractApiData<Student>(response);
   }
 
-  async getEnrollments(studentId: string) {
-    const { data } = await apiClient.get(`${this.basePath}/${studentId}/enrollments`);
-    return data;
+  async remove(uuid: string): Promise<{ success: boolean }> {
+    const response = await this.delete<any>(`${this.basePath}/${uuid}`);
+    return extractApiData<{ success: boolean }>(response);
+  }
+
+  async getEnrollments(studentId: string): Promise<{ data: any[]; total: number }> {
+    const response = await this.get<any>(`${this.basePath}/${studentId}/enrollments`);
+    return extractApiList(response);
+  }
+
+  async toggleStatus(uuid: string, isActive: boolean): Promise<Student> {
+    const response = await this.patch<any>(`${this.basePath}/${uuid}/status`, { isActive });
+    return extractApiData<Student>(response);
   }
 }
 

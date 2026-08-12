@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, ChangeEvent } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { getErrorMessage, type FormError } from '@/shared/types/form.types';
 import styles from './Select.module.css';
@@ -10,18 +10,37 @@ interface Option {
   label: string;
 }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
   label?: string;
   error?: FormError;
   options: Option[];
   fullWidth?: boolean;
   placeholder?: string;
   leftIcon?: React.ReactNode;
+  onChange?: (e: ChangeEvent<HTMLSelectElement>) => void;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, fullWidth, placeholder, leftIcon, className = '', ...props }, ref) => {
+  ({ 
+    label, 
+    error, 
+    options, 
+    fullWidth, 
+    placeholder, 
+    leftIcon, 
+    className = '', 
+    onChange,
+    value,
+    ...props 
+  }, ref) => {
     const errorMessage = getErrorMessage(error);
+
+    const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
+      console.log('🔍 Select interno - valor:', e.target.value);
+      if (onChange) {
+        onChange(e);
+      }
+    };
 
     return (
       <div className={`${styles.wrapper} ${fullWidth ? styles.fullWidth : ''}`}>
@@ -37,6 +56,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               fullWidth && styles.fullWidth,
               className,
             ].filter(Boolean).join(' ')}
+            onChange={handleChange}
+            value={value || ''}
             {...props}
           >
             {placeholder && (
