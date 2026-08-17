@@ -3,7 +3,7 @@ export interface Permission {
   name: string;
   description?: string;
   resource: string;
-  action: 'create' | 'read' | 'update' | 'delete' | 'manage';
+  action: 'create' | 'read' | 'update' | 'delete' ;
   module: string;
 }
 
@@ -65,7 +65,6 @@ export const actions = [
   { value: 'read', label: 'Ler', color: '#2563EB' },
   { value: 'update', label: 'Atualizar', color: '#F59E0B' },
   { value: 'delete', label: 'Excluir', color: '#EF4444' },
-  { value: 'manage', label: 'Gerenciar', color: '#8B5CF6' },
 ];
 
 // Cores para roles

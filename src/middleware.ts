@@ -32,7 +32,8 @@ export function middleware(request: NextRequest) {
                          pathname.startsWith('/academic/students')||
                          pathname.startsWith('/academic/enrollments')||
                          pathname.startsWith('/academic/grades')||
-                         pathname.startsWith('/academic/classes') ;
+                         pathname.startsWith('/academic/classes') ||
+                         pathname.startsWith('/academic/grade-subjects');
 
   // Tokens
   const platformToken = request.cookies.get(PLATFORM_TOKEN_KEY)?.value;

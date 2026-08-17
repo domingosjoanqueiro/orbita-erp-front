@@ -1,363 +1,340 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-  X, 
-  Shield, 
-  Lock, 
-  Unlock, 
+import { z } from 'zod';
+import {
+  Shield,
+  X,
+  CheckCircle,
+  Lock,
+  Unlock,
   ChevronDown,
-  ChevronRight,
-  Search,
+  ChevronUp,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { Input } from '@/shared/components/ui/Input/Input';
+import { Textarea } from '@/shared/components/ui/Textarea/Textarea';
 import { Button } from '@/shared/components/ui/Button/Button';
-import { createRoleSchema, updateRoleSchema } from '../validators/role.validators';
-import { modules, actions, roleColors } from '../types/role.types';
-import type { Role } from '../types/role.types';
+import { Badge } from '@/shared/components/ui/Badge/Badge';
+import { useToast } from '@/shared/contexts/ToastContext';
+import { useLoading } from '@/shared/contexts/LoadingContext';
+import { roleService } from '../services/role.service';
+import { roleColors } from '../types/role.types';
+import type { Role, Permission } from '../types/role.types';
 import styles from './RoleForm.module.css';
 
 interface RoleFormProps {
   role?: Role | null;
+  permissions?: Permission[];
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-// Mock de permissões disponíveis
-const availablePermissions = [
-  { id: 'dashboard.read', name: 'dashboard.read', resource: 'dashboard', action: 'read', module: 'dashboard' },
-  { id: 'dashboard.manage', name: 'dashboard.manage', resource: 'dashboard', action: 'manage', module: 'dashboard' },
-  { id: 'users.read', name: 'users.read', resource: 'users', action: 'read', module: 'users' },
-  { id: 'users.create', name: 'users.create', resource: 'users', action: 'create', module: 'users' },
-  { id: 'users.update', name: 'users.update', resource: 'users', action: 'update', module: 'users' },
-  { id: 'users.delete', name: 'users.delete', resource: 'users', action: 'delete', module: 'users' },
-  { id: 'users.manage', name: 'users.manage', resource: 'users', action: 'manage', module: 'users' },
-  { id: 'students.read', name: 'students.read', resource: 'students', action: 'read', module: 'students' },
-  { id: 'students.create', name: 'students.create', resource: 'students', action: 'create', module: 'students' },
-  { id: 'students.update', name: 'students.update', resource: 'students', action: 'update', module: 'students' },
-  { id: 'students.delete', name: 'students.delete', resource: 'students', action: 'delete', module: 'students' },
-  { id: 'students.manage', name: 'students.manage', resource: 'students', action: 'manage', module: 'students' },
-  { id: 'teachers.read', name: 'teachers.read', resource: 'teachers', action: 'read', module: 'teachers' },
-  { id: 'teachers.create', name: 'teachers.create', resource: 'teachers', action: 'create', module: 'teachers' },
-  { id: 'teachers.update', name: 'teachers.update', resource: 'teachers', action: 'update', module: 'teachers' },
-  { id: 'teachers.delete', name: 'teachers.delete', resource: 'teachers', action: 'delete', module: 'teachers' },
-  { id: 'teachers.manage', name: 'teachers.manage', resource: 'teachers', action: 'manage', module: 'teachers' },
-  { id: 'enrollments.read', name: 'enrollments.read', resource: 'enrollments', action: 'read', module: 'enrollments' },
-  { id: 'enrollments.create', name: 'enrollments.create', resource: 'enrollments', action: 'create', module: 'enrollments' },
-  { id: 'enrollments.manage', name: 'enrollments.manage', resource: 'enrollments', action: 'manage', module: 'enrollments' },
-  { id: 'reports.read', name: 'reports.read', resource: 'reports', action: 'read', module: 'reports' },
-  { id: 'reports.manage', name: 'reports.manage', resource: 'reports', action: 'manage', module: 'reports' },
-  { id: 'grades.read', name: 'grades.read', resource: 'grades', action: 'read', module: 'grades' },
-  { id: 'grades.create', name: 'grades.create', resource: 'grades', action: 'create', module: 'grades' },
-  { id: 'grades.update', name: 'grades.update', resource: 'grades', action: 'update', module: 'grades' },
-  { id: 'grades.manage', name: 'grades.manage', resource: 'grades', action: 'manage', module: 'grades' },
-  { id: 'attendance.read', name: 'attendance.read', resource: 'attendance', action: 'read', module: 'attendance' },
-  { id: 'attendance.create', name: 'attendance.create', resource: 'attendance', action: 'create', module: 'attendance' },
-  { id: 'attendance.manage', name: 'attendance.manage', resource: 'attendance', action: 'manage', module: 'attendance' },
-  { id: 'settings.read', name: 'settings.read', resource: 'settings', action: 'read', module: 'settings' },
-  { id: 'settings.update', name: 'settings.update', resource: 'settings', action: 'update', module: 'settings' },
-  { id: 'settings.manage', name: 'settings.manage', resource: 'settings', action: 'manage', module: 'settings' },
-];
+const roleSchema = z.object({
+  name: z.string()
+    .min(3, 'Nome deve ter no mínimo 3 caracteres')
+    .max(50, 'Nome deve ter no máximo 50 caracteres'),
+  description: z.string()
+    .max(255, 'Descrição deve ter no máximo 255 caracteres')
+    .optional(),
+  color: z.string().optional(),
+  isDefault: z.boolean().default(false),
+  permissionIds: z.array(z.string()).default([]),
+});
+
+type RoleFormData = z.infer<typeof roleSchema>;
 
 export const RoleForm: React.FC<RoleFormProps> = ({
   role,
+  permissions = [],
   onSuccess,
   onCancel,
 }) => {
   const isEditing = !!role;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expandedModules, setExpandedModules] = useState<string[]>([]);
-  const [searchPermission, setSearchPermission] = useState('');
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
-    role?.permissions.map(p => p.id) || []
-  );
+  const [selectedColor, setSelectedColor] = useState<string>(role?.color || '#8B5CF6');
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const { showSuccess, showError } = useToast();
+  const { startLoading, stopLoading } = useLoading();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
     watch,
-  } = useForm({
-    resolver: zodResolver(isEditing ? updateRoleSchema : createRoleSchema),
+    setValue,
+    control,
+  } = useForm<RoleFormData>({
+    resolver: zodResolver(roleSchema),
     defaultValues: {
       name: role?.name || '',
       description: role?.description || '',
       color: role?.color || '#8B5CF6',
       isDefault: role?.isDefault || false,
-      permissionIds: role?.permissions.map(p => p.id) || [],
+      permissionIds: role?.permissions?.map(p => p.id) || [],
     },
   });
 
-  // Expandir todos os módulos ao abrir
-  useEffect(() => {
-    if (availablePermissions.length > 0) {
-      const allModules = [...new Set(availablePermissions.map(p => p.module))];
-      setExpandedModules(allModules);
+  const watchedPermissionIds = watch('permissionIds') || [];
+
+  // Agrupar permissões por módulo
+  const groupedPermissions = permissions.reduce((acc, perm) => {
+    const module = perm.module || 'geral';
+    if (!acc[module]) {
+      acc[module] = [];
     }
-  }, []);
+    acc[module].push(perm);
+    return acc;
+  }, {} as Record<string, Permission[]>);
 
-  const toggleModule = (moduleId: string) => {
-    setExpandedModules(prev =>
-      prev.includes(moduleId)
-        ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
-    );
-  };
+  // Inicializar grupos expandidos
+  useEffect(() => {
+    const groups = Object.keys(groupedPermissions);
+    setExpandedGroups(new Set(groups));
+  }, [permissions]);
 
-  const expandAllModules = () => {
-    const allModules = [...new Set(availablePermissions.map(p => p.module))];
-    setExpandedModules(allModules);
-  };
-
-  const collapseAllModules = () => {
-    setExpandedModules([]);
-  };
-
-  const togglePermission = (permissionId: string) => {
-    setSelectedPermissions(prev => {
-      const newSelection = prev.includes(permissionId)
-        ? prev.filter(id => id !== permissionId)
-        : [...prev, permissionId];
-      setValue('permissionIds', newSelection);
-      return newSelection;
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupName)) {
+        next.delete(groupName);
+      } else {
+        next.add(groupName);
+      }
+      return next;
     });
   };
 
-  const toggleAllModule = (moduleId: string) => {
-    const modulePermissions = availablePermissions.filter(p => p.module === moduleId);
-    const allSelected = modulePermissions.every(p => selectedPermissions.includes(p.id));
-    
-    let newSelection: string[];
-    if (allSelected) {
-      newSelection = selectedPermissions.filter(
-        id => !modulePermissions.some(p => p.id === id)
-      );
+  const togglePermission = (permissionId: string) => {
+    const current = watchedPermissionIds;
+    if (current.includes(permissionId)) {
+      setValue('permissionIds', current.filter(id => id !== permissionId));
     } else {
-      newSelection = [
-        ...selectedPermissions,
-        ...modulePermissions.map(p => p.id).filter(id => !selectedPermissions.includes(id))
-      ];
+      setValue('permissionIds', [...current, permissionId]);
     }
-    setSelectedPermissions(newSelection);
-    setValue('permissionIds', newSelection);
   };
 
-  const getModulePermissions = (moduleId: string) => {
-    let perms = availablePermissions.filter(p => p.module === moduleId);
-    if (searchPermission) {
-      perms = perms.filter(p => 
-        p.name.toLowerCase().includes(searchPermission.toLowerCase())
-      );
+  const toggleAllGroup = (groupName: string) => {
+    const groupPerms = groupedPermissions[groupName] || [];
+    const groupIds = groupPerms.map(p => p.id);
+    const current = watchedPermissionIds;
+    const allSelected = groupIds.every(id => current.includes(id));
+    
+    if (allSelected) {
+      setValue('permissionIds', current.filter(id => !groupIds.includes(id)));
+    } else {
+      const newIds = [...current];
+      groupIds.forEach(id => {
+        if (!newIds.includes(id)) {
+          newIds.push(id);
+        }
+      });
+      setValue('permissionIds', newIds);
     }
-    return perms;
   };
 
-  const getModuleIcon = (moduleId: string) => {
-    const module = modules.find(m => m.id === moduleId);
-    return module?.label || moduleId;
+  const isGroupAllSelected = (groupName: string) => {
+    const groupPerms = groupedPermissions[groupName] || [];
+    const groupIds = groupPerms.map(p => p.id);
+    return groupIds.every(id => watchedPermissionIds.includes(id));
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RoleFormData) => {
     try {
       setIsSubmitting(true);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Dados da role:', { ...data, permissionIds: selectedPermissions });
+      startLoading();
+
+      const payload = {
+        name: data.name,
+        description: data.description || '',
+        color: selectedColor,
+        isDefault: data.isDefault || false,
+        permissionIds: data.permissionIds || [],
+      };
+
+      let response;
+      if (isEditing && role) {
+        response = await roleService.update(role.id, payload);
+        showSuccess('Role atualizada', `Role ${response.name} foi atualizada`);
+      } else {
+        response = await roleService.create(payload);
+        showSuccess('Role criada', `Role ${response.name} foi criada`);
+      }
+
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar role:', error);
+      let errorMessage = 'Erro ao salvar role. Tente novamente.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        const messages = Object.values(error.response.data.errors).flat();
+        errorMessage = messages.join(', ');
+      }
+      showError('Erro', errorMessage);
     } finally {
       setIsSubmitting(false);
+      stopLoading();
     }
   };
 
-  const totalPermissions = availablePermissions.length;
-  const selectedCount = selectedPermissions.length;
+  const watchedValues = watch();
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-      <div className={styles.formContent}>
-        <div className={styles.section}>
-          <h4 className={styles.sectionTitle}>Informações da Role</h4>
-          <div className={styles.fields}>
-            <div className={styles.field}>
-              <Input
-                label="Nome"
-                placeholder="Ex: Administrador"
-                leftIcon={<Shield size={16} />}
-                {...register('name')}
-                error={errors.name?.message}
-                fullWidth
-              />
-            </div>
-            <div className={styles.field}>
-              <Input
-                label="Descrição"
-                placeholder="Descreva o propósito da role"
-                {...register('description')}
-                error={errors.description?.message}
-                fullWidth
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>Cor</label>
-              <div className={styles.colorPicker}>
-                {roleColors.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    className={`${styles.colorOption} ${watch('color') === color ? styles.selected : ''}`}
-                    style={{ backgroundColor: color }}
-                    onClick={() => setValue('color', color)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Informações Básicas */}
+      <div className={styles.section}>
+        <h4 className={styles.sectionTitle}>
+          <Shield size={16} />
+          Informações da Role
+        </h4>
 
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h4 className={styles.sectionTitle}>Permissões</h4>
-            <div className={styles.sectionHeaderRight}>
-              <span className={styles.permissionCount}>
-                {selectedCount} de {totalPermissions}
-              </span>
-              <div className={styles.expandButtons}>
-                <button
-                  type="button"
-                  className={styles.expandButton}
-                  onClick={expandAllModules}
-                >
-                  <ChevronDown size={14} />
-                  Expandir
-                </button>
-                <button
-                  type="button"
-                  className={styles.expandButton}
-                  onClick={collapseAllModules}
-                >
-                  <ChevronRight size={14} />
-                  Recolher
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.searchPermissions}>
-            <Search size={16} className={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="Filtrar permissões..."
-              value={searchPermission}
-              onChange={(e) => setSearchPermission(e.target.value)}
-              className={styles.searchInput}
+        <div className={styles.fields}>
+          <div className={styles.field}>
+            <Input
+              label="Nome da Role"
+              placeholder="Ex: Administrador, Gerente..."
+              value={watchedValues.name || ''}
+              onChange={(e) => setValue('name', e.target.value)}
+              error={errors.name?.message}
+              fullWidth
             />
           </div>
 
-          <div className={styles.permissionsContainer}>
-            {modules.map((module) => {
-              const modulePermissions = getModulePermissions(module.id);
-              if (modulePermissions.length === 0) return null;
+          <div className={styles.field}>
+            <Textarea
+              label="Descrição"
+              placeholder="Descreva o propósito desta role"
+              value={watchedValues.description || ''}
+              onChange={(e) => setValue('description', e.target.value)}
+              fullWidth
+              rows={3}
+            />
+          </div>
 
-              const isExpanded = expandedModules.includes(module.id);
-              const selectedCountModule = modulePermissions.filter(p =>
-                selectedPermissions.includes(p.id)
-              ).length;
-              const isAllSelected = selectedCountModule === modulePermissions.length;
+          <div className={styles.field}>
+            <label className={styles.label}>Cor da Role</label>
+            <div className={styles.colorPicker}>
+              {roleColors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`${styles.colorOption} ${selectedColor === color ? styles.selected : ''}`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setSelectedColor(color)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.toggleLabel}>
+              <input
+                type="checkbox"
+                checked={watchedValues.isDefault || false}
+                onChange={(e) => setValue('isDefault', e.target.checked)}
+              />
+              <span>Role Padrão</span>
+            </label>
+            <p className={styles.toggleHelp}>
+              Roles padrão são atribuídas automaticamente a novos usuários
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Permissões */}
+      <div className={styles.section}>
+        <h4 className={styles.sectionTitle}>
+          <Lock size={16} />
+          Permissões
+          <Badge variant="info" size="sm">
+            {watchedPermissionIds.length} selecionadas
+          </Badge>
+        </h4>
+
+        {Object.keys(groupedPermissions).length === 0 ? (
+          <div className={styles.emptyPermissions}>
+            <p>Nenhuma permissão disponível</p>
+          </div>
+        ) : (
+          <div className={styles.permissionsContainer}>
+            {Object.entries(groupedPermissions).map(([module, perms]) => {
+              const isExpanded = expandedGroups.has(module);
+              const allSelected = isGroupAllSelected(module);
 
               return (
-                <div key={module.id} className={styles.moduleGroup}>
+                <div key={module} className={styles.permissionGroup}>
                   <div
-                    className={styles.moduleHeader}
-                    onClick={() => toggleModule(module.id)}
+                    className={styles.permissionGroupHeader}
+                    onClick={() => toggleGroup(module)}
                   >
-                    <div className={styles.moduleHeaderLeft}>
-                      {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                      <span className={styles.moduleName}>{getModuleIcon(module.id)}</span>
-                      <span className={styles.moduleCount}>
-                        {selectedCountModule}/{modulePermissions.length}
+                    <div className={styles.permissionGroupHeaderLeft}>
+                      <span className={styles.permissionGroupName}>
+                        {module.charAt(0).toUpperCase() + module.slice(1)}
                       </span>
+                      <Badge variant="neutral" size="sm">
+                        {perms.length} permissões
+                      </Badge>
                     </div>
-                    <div className={styles.moduleHeaderRight}>
+                    <div className={styles.permissionGroupHeaderRight}>
                       <button
                         type="button"
-                        className={styles.selectAllButton}
+                        className={styles.selectAllBtn}
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleAllModule(module.id);
+                          toggleAllGroup(module);
                         }}
                       >
-                        {isAllSelected ? (
-                          <>
-                            <Unlock size={12} />
-                            Desmarcar
-                          </>
-                        ) : (
-                          <>
-                            <Lock size={12} />
-                            Marcar
-                          </>
-                        )}
+                        {allSelected ? 'Desselecionar todas' : 'Selecionar todas'}
                       </button>
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className={styles.permissionsGridWrapper}>
-                      <div className={styles.permissionsGrid}>
-                        {modulePermissions.map((permission) => {
-                          const actionConfig = actions.find(a => a.value === permission.action);
-                          const isSelected = selectedPermissions.includes(permission.id);
-
-                          return (
-                            <label
-                              key={permission.id}
-                              className={`${styles.permissionItem} ${isSelected ? styles.selected : ''}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => togglePermission(permission.id)}
-                                className={styles.checkbox}
-                              />
-                              <span className={styles.permissionName}>
-                                {permission.resource}.{permission.action}
-                              </span>
-                              {actionConfig && (
-                                <span
-                                  className={styles.actionBadge}
-                                  style={{ 
-                                    backgroundColor: actionConfig.color + '20', 
-                                    color: actionConfig.color 
-                                  }}
-                                >
-                                  {actionConfig.label}
+                    <div className={styles.permissionGroupBody}>
+                      {perms.map((perm) => {
+                        const isSelected = watchedPermissionIds.includes(perm.id);
+                        return (
+                          <div
+                            key={perm.id}
+                            className={`${styles.permissionItem} ${isSelected ? styles.selected : ''}`}
+                            onClick={() => togglePermission(perm.id)}
+                          >
+                            <div className={styles.permissionItemLeft}>
+                              <div className={styles.permissionCheck}>
+                                {isSelected ? (
+                                  <CheckCircle size={16} className={styles.checked} />
+                                ) : (
+                                  <div className={styles.unchecked} />
+                                )}
+                              </div>
+                              <div className={styles.permissionInfo}>
+                                <span className={styles.permissionName}>
+                                  {perm.name || `${perm.resource}.${perm.action}`}
                                 </span>
-                              )}
-                            </label>
-                          );
-                        })}
-                      </div>
+                                <span className={styles.permissionResource}>
+                                  {perm.resource}.{perm.action}
+                                </span>
+                              </div>
+                            </div>
+                            <Badge variant="neutral" size="sm">
+                              {perm.module}
+                            </Badge>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-
-          {selectedPermissions.length === 0 && (
-            <div className={styles.noPermissionsSelected}>
-              <Shield size={24} />
-              <span>Nenhuma permissão selecionada</span>
-              <span className={styles.noPermissionsSub}>
-                Selecione pelo menos uma permissão para continuar
-              </span>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div className={styles.actions}>
@@ -372,8 +349,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
         <Button
           type="submit"
           isLoading={isSubmitting}
-          icon={<Shield size={18} />}
-          disabled={selectedPermissions.length === 0}
+          icon={<CheckCircle size={18} />}
         >
           {isEditing ? 'Atualizar' : 'Criar'} Role
         </Button>

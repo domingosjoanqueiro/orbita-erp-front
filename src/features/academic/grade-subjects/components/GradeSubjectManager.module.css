@@ -1,0 +1,969 @@
+/* ============================================================
+   GradeSubjectManager.module.css
+   Design moderno e intuitivo para gerenciamento de disciplinas
+   ============================================================ */
+
+/* ============================================================
+   Container Principal
+   ============================================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+  max-height: 85vh;
+  min-height: 450px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+}
+
+/* ============================================================
+   Loading
+   ============================================================ */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+  gap: var(--spacing-md);
+  color: var(--text-secondary);
+  min-height: 300px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: var(--primary);
+  width: 40px;
+  height: 40px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loadingContainer p {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.headerInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.headerInfo svg {
+  color: var(--primary);
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+}
+
+.headerInfo div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.subtitle strong {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  transform: rotate(90deg);
+}
+
+/* ============================================================
+   Stats
+   ============================================================ */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md) var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.statItem:hover {
+  border-color: var(--border-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.statLabel {
+  font-size: 0.688rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.statHighlight {
+  color: var(--primary);
+  background: rgba(37, 99, 235, 0.1);
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   Toolbar
+   ============================================================ */
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  padding: 0 var(--spacing-md);
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.searchWrapper:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.searchIcon {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.toolbarActions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.toolbarActions button {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.875rem;
+}
+
+/* ============================================================
+   Workload Input Field (Carga Horária em Massa)
+   ============================================================ */
+
+.workloadInputContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.workloadInputLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.workloadInputIcon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.workloadInputLabel {
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.workloadInputRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.workloadFieldInput {
+  width: 100px;
+}
+
+.workloadFieldInput input {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.813rem;
+  height: 38px;
+  text-align: center;
+  border-radius: var(--radius-md);
+}
+
+.workloadInputHelp {
+  font-size: 0.688rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  background: var(--bg-primary);
+  padding: 2px 10px;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   Subject List
+   ============================================================ */
+
+.subjectList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+  max-height: 420px;
+  padding-right: 6px;
+  padding-bottom: 4px;
+}
+
+.subjectList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.subjectList::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.subjectList::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.subjectList::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ============================================================
+   Grid
+   ============================================================ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+}
+
+/* ============================================================
+   Subject Card
+   ============================================================ */
+
+.subjectCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  position: relative;
+}
+
+.subjectCard:hover {
+  border-color: var(--primary-light);
+  background: var(--bg-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.subjectCard.selected {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.04);
+  box-shadow: 0 0 0 1px var(--primary), var(--shadow-sm);
+}
+
+/* ============================================================
+   Subject Click Area
+   ============================================================ */
+
+.subjectClickArea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  gap: var(--spacing-sm);
+}
+
+/* ============================================================
+   Subject Content
+   ============================================================ */
+
+.subjectContent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.subjectIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.subjectCard.selected .subjectIcon {
+  background: var(--primary);
+  color: white;
+}
+
+.subjectInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.subjectName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subjectCode {
+  font-size: 0.688rem;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+/* ============================================================
+   Subject Status / Badges
+   ============================================================ */
+
+.subjectStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.checked {
+  color: var(--success);
+  animation: popIn 0.2s ease;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.unchecked {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid var(--border-color);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.subjectCard:hover .unchecked {
+  border-color: var(--text-tertiary);
+}
+
+/* ============================================================
+   Workload Input Row (Carga Horária Individual)
+   ============================================================ */
+
+.workloadInputRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.subjectCard.selected .workloadInputRow {
+  background: rgba(37, 99, 235, 0.04);
+  border-color: var(--primary-light);
+}
+
+.workloadInputRowIcon {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.workloadIndividualInput {
+  flex: 1;
+  max-width: 100px;
+}
+
+.workloadIndividualInput input {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  height: 30px;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  border-width: 1.5px;
+}
+
+.workloadIndividualInput input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.workloadInputRowLabel {
+  font-size: 0.688rem;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+/* ============================================================
+   Empty State
+   ============================================================ */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  color: var(--text-secondary);
+  text-align: center;
+  gap: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--border-color);
+  min-height: 250px;
+}
+
+.emptyState svg {
+  color: var(--text-tertiary);
+  opacity: 0.4;
+  width: 56px;
+  height: 56px;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  max-width: 300px;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-md);
+  border-top: 2px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.footerInfo {
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.footerInfo span {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.footerActions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.footerActions button {
+  min-width: 120px;
+}
+
+/* ============================================================
+   Responsive - Tablet (768px - 1024px)
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+/* ============================================================
+   Responsive - Mobile (até 768px)
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-sm);
+    max-height: 92vh;
+    min-height: 400px;
+    border-radius: var(--radius-lg);
+  }
+
+  .header {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+  }
+
+  .headerInfo svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .statItem {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .statValue {
+    font-size: 1.1rem;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .searchWrapper {
+    max-width: 100%;
+    min-width: unset;
+  }
+
+  .toolbarActions {
+    justify-content: stretch;
+  }
+
+  .toolbarActions button {
+    flex: 1;
+  }
+
+  .workloadInputContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+  }
+
+  .workloadInputRight {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+  }
+
+  .workloadFieldInput {
+    width: 100%;
+  }
+
+  .workloadFieldInput input {
+    width: 100%;
+    height: 36px;
+  }
+
+  .workloadInputHelp {
+    text-align: center;
+    white-space: normal;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .subjectList {
+    max-height: 280px;
+  }
+
+  .subjectCard {
+    padding: var(--spacing-sm);
+  }
+
+  .subjectIcon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .subjectName {
+    font-size: 0.813rem;
+  }
+
+  .workloadInputRow {
+    flex-wrap: wrap;
+    padding: var(--spacing-xs);
+  }
+
+  .workloadIndividualInput {
+    max-width: 100%;
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .workloadIndividualInput input {
+    height: 28px;
+    font-size: 0.688rem;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: stretch;
+  }
+
+  .footerInfo {
+    text-align: center;
+  }
+
+  .footerActions {
+    flex-direction: column;
+  }
+
+  .footerActions button {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* ============================================================
+   Responsive - Mobile Small (até 480px)
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .container {
+    padding: var(--spacing-xs);
+    max-height: 95vh;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xs);
+  }
+
+  .statItem {
+    padding: var(--spacing-xs);
+  }
+
+  .statLabel {
+    font-size: 0.563rem;
+  }
+
+  .statValue {
+    font-size: 0.875rem;
+  }
+
+  .subjectCard {
+    padding: var(--spacing-xs);
+  }
+
+  .subjectContent {
+    gap: var(--spacing-xs);
+  }
+
+  .subjectIcon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .subjectName {
+    font-size: 0.75rem;
+  }
+
+  .subjectCode {
+    font-size: 0.563rem;
+  }
+
+  .workloadInputRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+  }
+
+  .workloadIndividualInput {
+    max-width: 100%;
+  }
+
+  .workloadInputRowLabel {
+    text-align: center;
+  }
+
+  .emptyState svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .emptyState p {
+    font-size: 0.813rem;
+  }
+
+  .footerInfo {
+    font-size: 0.75rem;
+  }
+}
+
+/* ============================================================
+   Tema Escuro (Dark Mode)
+   ============================================================ */
+
+[data-theme="dark"] .subjectCard {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .subjectCard:hover {
+  border-color: var(--primary);
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .subjectCard.selected {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+[data-theme="dark"] .subjectCard.selected .subjectIcon {
+  background: var(--primary);
+  color: white;
+}
+
+[data-theme="dark"] .searchWrapper:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="dark"] .workloadInputContainer {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .workloadInputRow {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .subjectCard.selected .workloadInputRow {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: var(--primary);
+}
+
+[data-theme="dark"] .emptyState {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .statItem {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .statItem:hover {
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .subjectList::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .subjectList::-webkit-scrollbar-thumb {
+  background: var(--bg-active);
+}
+
+[data-theme="dark"] .subjectList::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+[data-theme="dark"] .workloadIndividualInput input {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .workloadIndividualInput input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="dark"] .statHighlight {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+/* ============================================================
+   Animações
+   ============================================================ */
+
+.subjectCard {
+  animation: fadeInUp 0.35s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.subjectCard:nth-child(1) { animation-delay: 0.02s; }
+.subjectCard:nth-child(2) { animation-delay: 0.06s; }
+.subjectCard:nth-child(3) { animation-delay: 0.10s; }
+.subjectCard:nth-child(4) { animation-delay: 0.14s; }
+.subjectCard:nth-child(5) { animation-delay: 0.18s; }
+.subjectCard:nth-child(6) { animation-delay: 0.22s; }
+.subjectCard:nth-child(7) { animation-delay: 0.26s; }
+.subjectCard:nth-child(8) { animation-delay: 0.30s; }
+.subjectCard:nth-child(9) { animation-delay: 0.34s; }
+.subjectCard:nth-child(10) { animation-delay: 0.38s; }
+
+/* ============================================================
+   Utilidades
+   ============================================================ */
+
+/* Badge personalizado para status */
+.badgeSuccess {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.688rem;
+  font-weight: 600;
+}
+
+.badgeWarning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.688rem;
+  font-weight: 600;
+}
+
+.badgeInfo {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--primary);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.688rem;
+  font-weight: 600;
+}
+
+/* Destaque para o total de horas */
+.totalHours {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.1em;
+}

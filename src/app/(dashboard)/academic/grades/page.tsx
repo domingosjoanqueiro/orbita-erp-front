@@ -65,7 +65,7 @@ const getStatusBadge = (isActive: any) => {
 
 const getTerminalBadge = (isTerminal: boolean) => {
   return (
-    <Badge variant={isTerminal ? 'warning' : 'neutral'} size="sm">
+    <Badge variant={isTerminal ? 'warning' : 'info'} size="sm">
       <span className={styles.terminalBadge}>
         {isTerminal ? <Award size={10} /> : <TrendingUp size={10} />}
         {isTerminal ? 'Terminal' : 'Continuidade'}
@@ -85,7 +85,7 @@ export default function GradesPage() {
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
 
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;

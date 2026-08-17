@@ -31,60 +31,22 @@ import { SkeletonCard } from '@/shared/components/ui/Skeleton/SkeletonCard';
 import { useLoading } from '@/shared/contexts/LoadingContext';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { RoleForm } from '@/features/identity/roles/components/RoleForm';
+import { roleService } from '@/features/identity/roles/services/role.service';
+import { permissionService } from '@/features/identity/permissions/services/permission.service';
 import { roleColors } from '@/features/identity/roles/types/role.types';
-import type { Role, RoleFilters } from '@/features/identity/roles/types/role.types';
+import type { Role, RoleFilters, Permission } from '@/features/identity/roles/types/role.types';
 import styles from './page.module.css';
 
-// Dados mockados
-const mockRoles: Role[] = [
-  {
-    id: '1',
-    name: 'Administrador',
-    description: 'Acesso total ao sistema',
-    permissions: [
-      { id: '1', name: 'users.manage', resource: 'users', action: 'manage', module: 'users' },
-      { id: '2', name: 'roles.manage', resource: 'roles', action: 'manage', module: 'roles' },
-      { id: '3', name: 'companies.manage', resource: 'companies', action: 'manage', module: 'companies' },
-    ],
-    isDefault: false,
-    isSystem: true,
-    usersCount: 3,
-    color: '#2563EB',
-    createdAt: '2024-01-15T10:00:00',
-    updatedAt: '2024-12-09T14:30:00',
-  },
-  {
-    id: '2',
-    name: 'Gerente',
-    description: 'Gestão de operações diárias',
-    permissions: [
-      { id: '4', name: 'users.read', resource: 'users', action: 'read', module: 'users' },
-      { id: '5', name: 'students.manage', resource: 'students', action: 'manage', module: 'students' },
-      { id: '6', name: 'teachers.manage', resource: 'teachers', action: 'manage', module: 'teachers' },
-    ],
-    isDefault: true,
-    isSystem: false,
-    usersCount: 5,
-    color: '#10B981',
-    createdAt: '2024-02-20T09:00:00',
-    updatedAt: '2024-12-09T13:00:00',
-  },
-  {
-    id: '3',
-    name: 'Usuário',
-    description: 'Acesso básico ao sistema',
-    permissions: [
-      { id: '7', name: 'students.read', resource: 'students', action: 'read', module: 'students' },
-      { id: '8', name: 'teachers.read', resource: 'teachers', action: 'read', module: 'teachers' },
-    ],
-    isDefault: true,
-    isSystem: false,
-    usersCount: 12,
-    color: '#8B5CF6',
-    createdAt: '2024-03-10T11:00:00',
-    updatedAt: '2024-12-01T10:00:00',
-  },
-];
+const isActiveBoolean = (value: any): boolean => {
+  if (value === undefined || value === null) return false;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const lower = value.toLowerCase().trim();
+    return lower === '1' || lower === 'true' || lower === 'yes' || lower === 'on';
+  }
+  return false;
+};
 
 const getStatusBadge = (isDefault: boolean) => {
   return (
@@ -113,7 +75,12 @@ export default function RolesPage() {
   const { showSuccess, showError } = useToast();
 
   const [roles, setRoles] = useState<Role[]>([]);
-  const [filters, setFilters] = useState<RoleFilters>({ page: 1, limit: 10 });
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<RoleFilters>({
+    page: 1,
+    limit: 10,
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -124,15 +91,61 @@ export default function RolesPage() {
     roleName?: string;
   }>({ isOpen: false });
 
+  // ============================================================
+  // Carregar Permissões
+  // ============================================================
+
   useEffect(() => {
-    const loadRoles = async () => {
-      startLoading();
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setRoles(mockRoles);
-      stopLoading();
+    const loadPermissions = async () => {
+      try {
+        const response = await permissionService.getAll({ limit: 100 });
+        setPermissions(response.data || []);
+        console.log('📚 Permissões carregadas:', response.data?.length);
+      } catch (error) {
+        console.error('Erro ao carregar permissões:', error);
+        showError('Erro', 'Não foi possível carregar as permissões');
+      }
     };
-    loadRoles();
+    loadPermissions();
   }, []);
+
+  // ============================================================
+  // Carregar Roles
+  // ============================================================
+
+  const loadRoles = async () => {
+    try {
+      startLoading();
+      const response = await roleService.getAll({
+        ...filters,
+        search: searchTerm || undefined,
+      });
+      const dataArray = response?.data || [];
+      setRoles(dataArray.map((r: any) => ({ 
+        ...r, 
+        isActive: isActiveBoolean(r.isActive),
+        permissions: r.permissions || [],
+        usersCount: r.usersCount || 0,
+      })));
+      setTotal(response?.total || 0);
+    } catch (error: any) {
+      console.error('Erro ao carregar roles:', error);
+      showError('Erro', 'Não foi possível carregar as roles');
+      setRoles([]);
+      setTotal(0);
+    } finally {
+      stopLoading();
+    }
+  };
+
+  useEffect(() => {
+    loadRoles();
+  }, [filters.page, filters.limit, filters.isDefault, filters.isSystem]);
+
+  const handleSearch = () => {
+    setFilters({ ...filters, page: 1 });
+    loadRoles();
+  };
 
   const handleCreate = () => {
     setSelectedRole(null);
@@ -160,17 +173,28 @@ export default function RolesPage() {
     const { roleId, roleName } = confirmDialog;
     try {
       startLoading();
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setRoles(roles.filter(r => r.id !== roleId));
+      await roleService.remove(roleId!);
       showSuccess('Role excluída', `${roleName} foi removida com sucesso`);
       setConfirmDialog({ isOpen: false });
-    } catch (error) {
-      showError('Erro', 'Ocorreu um erro ao excluir a role');
+      loadRoles();
+    } catch (error: any) {
+      console.error('Erro ao excluir role:', error);
+      showError('Erro', error.response?.data?.message || 'Ocorreu um erro ao excluir a role');
     } finally {
       stopLoading();
     }
   };
 
+  const formatDate = (date: string) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  // Filtrar roles localmente para busca
   const filteredRoles = roles.filter(role => {
     const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (role.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
@@ -179,15 +203,7 @@ export default function RolesPage() {
     return matchesSearch && matchesDefault && matchesSystem;
   });
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
-
-  if (isLoading) {
+  if (isLoading && roles.length === 0) {
     return (
       <div className={styles.page}>
         <div className={styles.header}>
@@ -214,7 +230,7 @@ export default function RolesPage() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.headerIcon}>
-            <Shield size={20} />
+            <Shield size={24} />
           </div>
           <div>
             <h1 className={styles.title}>Roles</h1>
@@ -223,7 +239,7 @@ export default function RolesPage() {
             </p>
           </div>
           <span className={styles.totalCount}>
-            {filteredRoles.length}
+            {total} roles
           </span>
         </div>
         <div className={styles.headerActions}>
@@ -247,6 +263,7 @@ export default function RolesPage() {
               placeholder="Pesquisar roles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className={styles.searchInput}
             />
           </div>
@@ -262,7 +279,7 @@ export default function RolesPage() {
         <div className={styles.toolbarRight}>
           <span className={styles.lastUpdate}>
             <Clock size={12} />
-            Atualizado agora
+            {filteredRoles.length} roles encontradas
           </span>
         </div>
       </div>
@@ -368,18 +385,18 @@ export default function RolesPage() {
                 <div className={styles.permissionsHeader}>
                   <span className={styles.permissionsLabel}>
                     <Shield size={14} />
-                    {role.permissions.length} permissões
+                    {(role.permissions || []).length} permissões
                   </span>
                 </div>
                 <div className={styles.permissionsTags}>
-                  {role.permissions.slice(0, 4).map((perm) => (
+                  {(role.permissions || []).slice(0, 4).map((perm) => (
                     <span key={perm.id} className={styles.permissionTag}>
                       {perm.resource}.{perm.action}
                     </span>
                   ))}
-                  {role.permissions.length > 4 && (
+                  {(role.permissions || []).length > 4 && (
                     <span className={styles.permissionMore}>
-                      +{role.permissions.length - 4}
+                      +{(role.permissions || []).length - 4}
                     </span>
                   )}
                 </div>
@@ -394,7 +411,7 @@ export default function RolesPage() {
               <div className={styles.cardStats}>
                 <span className={styles.statItem}>
                   <Users size={12} />
-                  {role.usersCount} usuários
+                  {role.usersCount || 0} usuários
                 </span>
                 <span className={styles.statItem}>
                   <Clock size={12} />
@@ -444,6 +461,7 @@ export default function RolesPage() {
       >
         <RoleForm
           role={selectedRole}
+          permissions={permissions}
           onSuccess={() => {
             setIsModalOpen(false);
             setSelectedRole(null);
@@ -453,11 +471,7 @@ export default function RolesPage() {
                 ? `${selectedRole.name} foi atualizada com sucesso`
                 : 'Nova role criada com sucesso'
             );
-            startLoading();
-            setTimeout(() => {
-              setRoles(mockRoles);
-              stopLoading();
-            }, 1000);
+            loadRoles();
           }}
           onCancel={() => {
             setIsModalOpen(false);

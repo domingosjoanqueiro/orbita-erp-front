@@ -1,0 +1,1399 @@
+/* ============================================================
+   page.module.css - Associações Classe-Disciplina
+   ============================================================ */
+
+/* ============================================================
+   Container Principal
+   ============================================================ */
+
+.page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  transition: all 0.3s ease;
+}
+
+.header:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.headerIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.totalCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 4px 14px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.createButton {
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  border: none;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+}
+
+.createButton:hover {
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   Toolbar
+   ============================================================ */
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 400px;
+  min-width: 200px;
+  padding: 0 var(--spacing-md);
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+}
+
+.searchWrapper:focus-within {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.searchIcon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.filterButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0.5rem 1rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filterButton:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-tertiary);
+}
+
+.filterButton.active {
+  border-color: #8B5CF6;
+  color: #8B5CF6;
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.viewToggle {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border-color);
+}
+
+.viewButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+}
+
+.viewButton:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.viewButton.active {
+  background: var(--bg-primary);
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.lastUpdate {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Filters Panel
+   ============================================================ */
+
+.filtersPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-md);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filterOptions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.25rem 0.875rem;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterChip:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-tertiary);
+}
+
+.filterChip.active {
+  background: #8B5CF6;
+  color: white;
+  border-color: #8B5CF6;
+}
+
+/* ============================================================
+   Content
+   ============================================================ */
+
+.content {
+  min-height: 300px;
+}
+
+/* ============================================================
+   Grouped View (Visualização Agrupada por Classe)
+   ============================================================ */
+
+.groupedContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.gradeGroup {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.gradeGroup:hover {
+  border-color: #8B5CF6;
+  box-shadow: var(--shadow-sm);
+}
+
+.gradeGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.gradeGroupHeader:hover {
+  background: var(--bg-hover);
+}
+
+.gradeGroupHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.gradeGroupIcon {
+  color: #8B5CF6;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.gradeGroupName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.gradeGroupCode {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-left: var(--spacing-xs);
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.gradeGroupHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.gradeGroupToggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gradeGroupToggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.gradeGroupChevron {
+  transition: transform var(--transition-base);
+  width: 18px;
+  height: 18px;
+}
+
+.gradeGroupChevron.expanded {
+  transform: rotate(90deg);
+}
+
+.gradeGroupBody {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+  animation: slideDown 0.3s ease;
+}
+
+.gradeGroupGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+/* Subject Item dentro do grupo */
+.subjectItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  gap: var(--spacing-sm);
+}
+
+.subjectItem:hover {
+  border-color: var(--border-color);
+  background: var(--bg-hover);
+  transform: translateX(4px);
+}
+
+.subjectItemContent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.subjectItemIcon {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.subjectItemInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.subjectItemName {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.subjectItemCode {
+  font-size: 0.688rem;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+}
+
+.subjectItemWorkload {
+  font-size: 0.688rem;
+  color: var(--primary);
+  font-weight: 600;
+  background: rgba(37, 99, 235, 0.08);
+  padding: 1px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.subjectItemActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.subjectItemAction {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subjectItemAction:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   Cards View
+   ============================================================ */
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.associationCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.associationCard:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  border-color: #8B5CF6;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.cardIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.itemName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.itemGrade {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+}
+
+.cardActions {
+  display: flex;
+  gap: 2px;
+}
+
+.iconButton {
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.actionActive {
+  color: var(--success);
+}
+.actionInactive {
+  color: var(--warning);
+}
+.actionDanger {
+  color: var(--error);
+}
+.actionDanger:hover {
+  color: var(--error);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.infoLabel {
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.infoValue {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+.cardTags {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.cardDate {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.688rem;
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   Table View
+   ============================================================ */
+
+.tableContainer {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.gradeCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.gradeCell svg {
+  color: var(--text-tertiary);
+}
+
+.gradeName {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.gradeCode {
+  font-size: 0.688rem;
+  color: var(--text-secondary);
+}
+
+.subjectCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.subjectCell svg {
+  color: var(--text-tertiary);
+}
+
+.subjectName {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.subjectCode {
+  font-size: 0.688rem;
+  color: var(--text-secondary);
+}
+
+.subjectWorkload {
+  font-size: 0.688rem;
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.actionButton {
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionButton:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   Status Badge
+   ============================================================ */
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============================================================
+   Empty State
+   ============================================================ */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  text-align: center;
+  gap: var(--spacing-md);
+  background: var(--bg-primary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-xl);
+  min-height: 350px;
+}
+
+.emptyIconWrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.emptyIcon {
+  color: var(--text-tertiary);
+  opacity: 0.4;
+}
+
+.emptyTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.emptySubtext {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+  max-width: 400px;
+}
+
+/* ============================================================
+   Class Selector
+   ============================================================ */
+
+.classSelector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+}
+
+.classSelectorHelp {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.classSelectorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+}
+
+/* ============================================================
+   Responsive - Tablet (768px - 1024px)
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .page {
+    padding: var(--spacing-md);
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .cardsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .gradeGroupGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+/* ============================================================
+   Responsive - Mobile (até 768px)
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .page {
+    padding: var(--spacing-sm);
+  }
+
+  .header {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .headerLeft {
+    flex-wrap: wrap;
+  }
+
+  .headerIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .totalCount {
+    font-size: 0.688rem;
+    padding: 2px 10px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .toolbarLeft {
+    flex-wrap: wrap;
+  }
+
+  .searchWrapper {
+    max-width: 100%;
+    min-width: unset;
+  }
+
+  .viewToggle {
+    flex: 1;
+    justify-content: stretch;
+  }
+
+  .viewButton {
+    flex: 1;
+    padding: 6px 8px;
+  }
+
+  .filtersPanel {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .associationCard {
+    padding: var(--spacing-md);
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tableContainer {
+    overflow-x: auto;
+  }
+
+  /* Grouped View - Mobile */
+  .gradeGroupHeader {
+    padding: var(--spacing-sm) var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .gradeGroupHeaderLeft {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .gradeGroupName {
+    font-size: 0.875rem;
+  }
+
+  .gradeGroupBody {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .gradeGroupGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .subjectItem {
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .subjectItemInfo {
+    flex-wrap: wrap;
+  }
+
+  .subjectItemActions {
+    margin-left: auto;
+  }
+
+  .classSelectorActions {
+    flex-direction: column-reverse;
+  }
+
+  .classSelectorActions button {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   Responsive - Mobile Small (até 480px)
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--spacing-xs);
+  }
+
+  .header {
+    padding: var(--spacing-sm);
+  }
+
+  .headerLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .headerIcon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .headerIcon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .subtitle {
+    font-size: 0.75rem;
+  }
+
+  .totalCount {
+    align-self: flex-start;
+  }
+
+  .toolbarLeft {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .searchWrapper {
+    width: 100%;
+  }
+
+  .filterButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .viewToggle {
+    width: 100%;
+  }
+
+  .gradeGroupHeader {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .gradeGroupName {
+    font-size: 0.813rem;
+  }
+
+  .gradeGroupCode {
+    font-size: 0.625rem;
+  }
+
+  .gradeGroupBody {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .subjectItem {
+    padding: var(--spacing-xs);
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .subjectItemContent {
+    gap: var(--spacing-xs);
+  }
+
+  .subjectItemName {
+    font-size: 0.75rem;
+  }
+
+  .subjectItemCode {
+    font-size: 0.625rem;
+  }
+
+  .subjectItemActions {
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cardActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .cardFooter {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+  }
+
+  .cardTags {
+    justify-content: center;
+  }
+
+  .cardDate {
+    justify-content: center;
+  }
+
+  .emptyState {
+    padding: var(--spacing-xl) var(--spacing-md);
+    min-height: 250px;
+  }
+
+  .emptyIconWrapper {
+    width: 60px;
+    height: 60px;
+  }
+
+  .emptyIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .emptyTitle {
+    font-size: 1rem;
+  }
+
+  .emptySubtext {
+    font-size: 0.813rem;
+  }
+}
+
+/* ============================================================
+   Dark Theme
+   ============================================================ */
+
+[data-theme="dark"] .header:hover {
+  border-color: #8B5CF6;
+}
+
+[data-theme="dark"] .associationCard:hover {
+  border-color: #8B5CF6;
+}
+
+[data-theme="dark"] .tableContainer:hover {
+  border-color: #8B5CF6;
+}
+
+[data-theme="dark"] .filterButton.active {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .filterChip.active {
+  background: #6D28D9;
+}
+
+[data-theme="dark"] .gradeGroup:hover {
+  border-color: #8B5CF6;
+}
+
+[data-theme="dark"] .gradeGroupHeader {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .subjectItem {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .subjectItem:hover {
+  background: var(--bg-hover);
+}
+
+[data-theme="dark"] .infoItem {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .emptyState {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .emptyIconWrapper {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .searchWrapper:focus-within {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .viewToggle {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .viewButton.active {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .subjectItemWorkload {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="dark"] .gradeGroupIcon {
+  color: #8B5CF6;
+}
+
+/* ============================================================
+   Animações e Transições
+   ============================================================ */
+
+.gradeGroupBody {
+  animation: expandIn 0.3s ease;
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    transform: scaleY(0.95);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+}
+
+.associationCard {
+  animation: cardFadeIn 0.4s ease forwards;
+  opacity: 0;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.associationCard:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.associationCard:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.associationCard:nth-child(3) {
+  animation-delay: 0.10s;
+}
+.associationCard:nth-child(4) {
+  animation-delay: 0.14s;
+}
+.associationCard:nth-child(5) {
+  animation-delay: 0.18s;
+}
+.associationCard:nth-child(6) {
+  animation-delay: 0.22s;
+}
+
+.subjectItem {
+  animation: itemFadeIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.subjectItem:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.subjectItem:nth-child(2) {
+  animation-delay: 0.05s;
+}
+.subjectItem:nth-child(3) {
+  animation-delay: 0.08s;
+}
+.subjectItem:nth-child(4) {
+  animation-delay: 0.11s;
+}
+.subjectItem:nth-child(5) {
+  animation-delay: 0.14s;
+}
+.subjectItem:nth-child(6) {
+  animation-delay: 0.17s;
+}
+
+/* Adicione ao final do page.module.css */
+
+/* ============================================================
+   Botão Gerenciar na Visualização Agrupada
+   ============================================================ */
+/* ============================================================
+   Botão Gerenciar - Apenas Ícone (Minimalista)
+   ============================================================ */
+
+.gradeGroupManageBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.15rem;
+    background: transparent;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    width: 26px;
+    height: 26px;
+}
+
+.gradeGroupManageBtn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(139, 92, 246, 0.04);
+    transform: scale(1.05);
+}
+
+.gradeGroupManageBtn:active {
+    transform: scale(0.95);
+    background: rgba(139, 92, 246, 0.08);
+}
+
+.gradeGroupManageBtn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.gradeGroupManageBtn span {
+    display: none;
+}
+
+/* Tema Escuro */
+[data-theme="dark"] .gradeGroupManageBtn {
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .gradeGroupManageBtn:hover {
+    border-color: #8B5CF6;
+    color: #8B5CF6;
+    background: rgba(139, 92, 246, 0.08);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .gradeGroupManageBtn {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .gradeGroupManageBtn svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gradeGroupManageBtn {
+        width: 20px;
+        height: 20px;
+        border-width: 1px;
+    }
+    
+    .gradeGroupManageBtn svg {
+        width: 10px;
+        height: 10px;
+    }
+}

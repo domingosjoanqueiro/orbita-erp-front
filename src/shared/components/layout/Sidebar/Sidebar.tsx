@@ -134,6 +134,7 @@ const academicConfigItems: MenuItem[] = [
   { icon: <GraduationCap size={18} />, label: 'Classes', href: '/academic/grades', companyOnly: true },
   { icon: <School size={18} />, label: 'Turmas', href: '/academic/classes', companyOnly: true },
   { icon: <BookMarked size={18} />, label: 'Disciplinas', href: '/academic/subjects', companyOnly: true },
+  { icon: <BookOpen size={18} />, label: 'Plano Currícular', href: '/academic/grade-subjects', companyOnly: true },
 ];
 
 // Acadêmico - Gestão
@@ -174,7 +175,7 @@ const hrItems: MenuItem[] = [
 // Plataforma
 const platformItems: MenuItem[] = [
   { icon: <Building2 size={18} />, label: 'Empresas', href: '/companies', platformOnly: true },
-  // { icon: <UserCircle size={18} />, label: 'Usuários', href: '/users-platform', platformOnly: true },
+  { icon: <UserCircle size={18} />, label: 'Usuários', href: '/users-platform', platformOnly: true },
   // { icon: <Shield size={18} />, label: 'Roles', href: '/roles-platform', platformOnly: true },
   // { icon: <Key size={18} />, label: 'Permissões', href: '/system/permissions', platformOnly: true },
   // { icon: <Database size={18} />, label: 'Backup', href: '/backup', platformOnly: true },
@@ -190,12 +191,10 @@ const adminItems: MenuItem[] = [
 ];
 
 const settingsItems: MenuItem[] = [
-  {
-    icon: <Building2 size={18} />,
-    label: 'Informações da Empresa',
-    href: '/company/info',
-    companyOnly: true
-  },
+  { icon: <Building2 size={18} />, label: 'Informações da Empresa', href: '/company/info', companyOnly: true },
+  { icon: <UserCircle size={18} />, label: 'Usuários', href: '/users', companyOnly: true },
+  { icon: <Shield size={18} />, label: 'Roles', href: '/roles', companyOnly: true },
+  { icon: <Key size={18} />, label: 'Permissões', href: '/permissions', companyOnly: true },
 ];
 
 

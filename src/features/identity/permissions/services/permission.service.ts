@@ -1,62 +1,45 @@
-import { ApiService, ApiServiceOptions } from '@/shared/services/api/api.service';
+// src/features/identity/permissions/services/permission.service.ts
 
-export interface Permission {
-  id: string;
-  uuid: string;
-  name: string;
-  code: string;
-  module: string;
-  description?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PermissionFilters {
-  module?: string;
-  search?: string;
-  isActive?: boolean;
-  page?: number;
-  limit?: number;
-}
+import { ApiService } from '@/shared/services/api/api.service';
+import { extractApiData, extractApiList } from '@/shared/utils/api.utils';
+import type { Permission, PermissionFilters } from '../types/permission.types';
 
 class PermissionService extends ApiService {
   private basePath = '/permissions';
 
-  async getAll(filters?: PermissionFilters): Promise<{ data: Permission[]; total: number; page: number; limit: number }> {
-    return this.get<{ data: Permission[]; total: number; page: number; limit: number }>(`${this.basePath}`, { params: filters });
+  constructor() {
+    super('company');
   }
 
-  async getById(id: string): Promise<Permission> {
-    return this.get<Permission>(`${this.basePath}/${id}`);
-  }
-
-  async getModules(): Promise<string[]> {
-    return this.get<string[]>(`${this.basePath}/modules`);
+  async getAll(filters?: PermissionFilters): Promise<{
+    data: Permission[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const response = await this.get<any>(`${this.basePath}`, { params: filters });
+    
+    console.log('📥 PermissionService.getAll - Resposta:', response);
+    const extracted = extractApiList<Permission>(response);
+    return {
+      data: extracted.data,
+      total: extracted.total,
+      page: extracted.page || filters?.page || 1,
+      limit: extracted.limit || filters?.limit || 10,
+      totalPages: extracted.totalPages || 1,
+    };
   }
 
   async getByModule(module: string): Promise<Permission[]> {
-    return this.get<Permission[]>(`${this.basePath}/module/${module}`);
+    const response = await this.get<any>(`${this.basePath}/module/${module}`);
+    return extractApiList<Permission>(response).data;
   }
 
-  async create(data: Omit<Permission, 'id' | 'uuid' | 'createdAt' | 'updatedAt'>): Promise<Permission> {
-    return this.post<Permission>(`${this.basePath}`, data);
+  async getGroupedByModule(): Promise<Record<string, Permission[]>> {
+    const response = await this.get<any>(`${this.basePath}/grouped`);
+    return extractApiData<Record<string, Permission[]>>(response);
   }
-
-  async update(id: string, data: Partial<Permission>): Promise<Permission> {
-    return this.patch<Permission>(`${this.basePath}/${id}`, data);
-  }
-
-  // CORRIGIDO: Não sobrescrever, apenas usar o método da classe base
-  // ou usar um nome diferente
-  async remove(id: string): Promise<{ success: boolean }> {
-    return this.delete<{ success: boolean }>(`${this.basePath}/${id}`);
-  }
-
-  // Alternativa: usar o método delete da classe base diretamente
-  // async deletePermission(id: string): Promise<{ success: boolean }> {
-  //   return this.delete<{ success: boolean }>(`${this.basePath}/${id}`);
-  // }
 }
 
 export const permissionService = new PermissionService();
