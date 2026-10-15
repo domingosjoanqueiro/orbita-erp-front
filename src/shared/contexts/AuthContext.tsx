@@ -30,6 +30,12 @@ export interface User {
     uuid: string;
     name: string;
   };
+  // Preenchido quando o utilizador está associado a um professor (portal do professor)
+  teacher?: {
+    uuid: string;
+    teacherNumber: string;
+    fullName: string;
+  } | null;
 }
 
 interface AuthContextType {
@@ -70,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isActive: userData.isActive !== undefined ? userData.isActive : true,
       roles: userData.roles || [],
       company: data.company || userData.company || { id: 0, uuid: '', name: '' },
+      teacher: userData.teacher ?? null,
     };
   };
 
@@ -85,6 +92,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setUser(parsedUser);
               setMustChangePassword(parsedUser.mustChangePassword || false);
               setIsLoading(false);
+              // Revalida em segundo plano: roles/permissões podem ter mudado
+              refreshUser().catch(() => undefined);
               return;
             } catch {
               localStorage.removeItem(COMPANY_USER_KEY);
@@ -114,7 +123,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUser = async () => {
     try {
       const response = await authService.me();
-      const userData = extractUserData(response);
+      // /auth/me responde { success, message, data: { ...utilizador, roles, company } }
+      const userData = extractUserData(response?.data ?? response);
       setUser(userData);
       setMustChangePassword(userData.mustChangePassword || false);
       localStorage.setItem(COMPANY_USER_KEY, JSON.stringify(userData));
@@ -189,6 +199,13 @@ const login = async (identifier: string, password: string) => {
     setUser(userData);
     setMustChangePassword(userData.mustChangePassword || false);
     localStorage.setItem(COMPANY_USER_KEY, JSON.stringify(userData));
+
+    // A resposta do login não traz roles/permissões; carrega o perfil completo
+    try {
+      await refreshUser();
+    } catch {
+      // Mantém os dados básicos do login; as permissões serão carregadas no próximo arranque
+    }
 
     // Salvar mustChangePassword em cookie
     document.cookie = `mustChangePassword=${userData.mustChangePassword}; path=/; max-age=3600; SameSite=Lax`;

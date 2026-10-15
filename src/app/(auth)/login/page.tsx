@@ -25,7 +25,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('🔍 LoginPage - Estado:', { user, isAuthenticated, isLoading });
 
   const {
     register,
@@ -50,9 +49,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setError(null);
-      console.log('📤 Tentando login com:', data.identifier);
       await login(data.identifier, data.password);
-      console.log('✅ Login bem-sucedido!');
     } catch (err: any) {
       console.error('❌ Erro no login capturado:', err);
       const message = err.response?.data?.message || err.message || 'Credenciais inválidas. Tente novamente.';

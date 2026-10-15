@@ -1,0 +1,194 @@
+/* src/app/(dashboard)/notifications/page.module.css */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.groupLabel {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    background: var(--bg-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+    animation: itemIn 0.3s ease both;
+}
+
+@keyframes itemIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.item:hover {
+    border-color: rgba(139, 92, 246, 0.45);
+    box-shadow: 0 8px 22px rgba(109, 40, 217, 0.1);
+}
+
+.item.unread {
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0.07), var(--bg-primary) 60%);
+    border-color: rgba(139, 92, 246, 0.35);
+}
+
+.unreadDot {
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: #7C3AED;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+}
+
+.body {
+    flex: 1;
+    min-width: 0;
+}
+
+.titleRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.time {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+}
+
+.message {
+    margin: 4px 0 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: var(--spacing-sm);
+}
+
+.action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.action:hover {
+    color: #FFFFFF;
+    background: #7C3AED;
+    border-color: #7C3AED;
+}
+
+.action.danger:hover {
+    background: #EF4444;
+    border-color: #EF4444;
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-xl);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+}
+
+.emptyIcon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(139, 92, 246, 0.1);
+    color: #7C3AED;
+}
+
+.emptyTitle {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.skeleton {
+    height: 92px;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+@media (max-width: 640px) {
+    .item {
+        padding: var(--spacing-md);
+    }
+}
+
+[data-theme="dark"] .item.unread {
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0.16), var(--bg-primary) 60%);
+}
+
+[data-theme="dark"] .emptyIcon {
+    background: rgba(139, 92, 246, 0.2);
+    color: #C4B5FD;
+}

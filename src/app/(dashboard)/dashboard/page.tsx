@@ -27,6 +27,7 @@ import { companyDashboardService } from '@/features/dashboard/services/dashboard
 import type { Activity } from '@/shared/components/dashboard/RecentActivities/RecentActivities';
 import type { Event } from '@/shared/components/dashboard/UpcomingEvents/UpcomingEvents';
 import type { CompanyDashboardStats } from '@/features/dashboard/types/dashboard.types';
+import { TeacherDashboard } from '@/features/academic/teacher-portal/components/TeacherDashboard';
 import styles from './page.module.css';
 
 // Quick Actions
@@ -37,7 +38,7 @@ const quickActions = [
   { label: 'Relatórios', icon: <SquareActivity size={16} />, color: '#8B5CF6' },
 ];
 
-export default function DashboardPage() {
+function CompanyDashboard() {
   const { startLoading, stopLoading, isLoading } = useLoading();
   const { showError } = useToast();
   const { user } = useAuth();
@@ -59,18 +60,14 @@ const loadDashboardData = async () => {
       companyDashboardService.getEvents(),
     ]);
 
-    console.log('📊 Raw Stats:', statsResponse);
-    console.log('📊 Raw Activities:', activitiesResponse);
-    console.log('📊 Raw Events:', eventsResponse);
+   
 
     // Extrair os dados da resposta - USANDO TYPE ASSERTION para evitar erros de tipagem
     const statsData = (statsResponse as any)?.data || statsResponse;
     const activitiesArray = (activitiesResponse as any)?.data || activitiesResponse || [];
     const eventsArray = (eventsResponse as any)?.data || eventsResponse || [];
 
-    console.log('📊 Stats Data:', statsData);
-    console.log('📊 Activities Array:', activitiesArray);
-    console.log('📊 Events Array:', eventsArray);
+    
 
     setStats(statsData);
     
@@ -82,7 +79,6 @@ const loadDashboardData = async () => {
       time: act.time || 'Agora',
       status: act.status || 'info',
     }));
-    console.log('✅ Formatted Activities:', formattedActivities);
     setActivities(formattedActivities);
     
     // Formatar events
@@ -98,7 +94,6 @@ const loadDashboardData = async () => {
       isNotified: evt.isNotified || false,
       isImportant: evt.isImportant || false,
     }));
-    console.log('✅ Formatted Events:', formattedEvents);
     setEvents(formattedEvents);
     
     setLastUpdated(new Date());
@@ -366,4 +361,10 @@ const loadDashboardData = async () => {
       </div>
     </div>
   );
+}
+
+// Professores veem o seu portal; os restantes utilizadores, o painel da escola
+export default function DashboardPage() {
+  const { user } = useAuth();
+  return user?.teacher ? <TeacherDashboard /> : <CompanyDashboard />;
 }

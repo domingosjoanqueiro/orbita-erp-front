@@ -125,7 +125,6 @@ export default function PlatformRolesPage() {
         search: searchTerm || undefined,
       });
       
-      console.log('📊 Resposta da API:', response);
       
       let rolesArray: PlatformRole[] = [];
       let totalItems = 0;

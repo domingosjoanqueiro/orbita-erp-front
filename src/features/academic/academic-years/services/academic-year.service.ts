@@ -4,7 +4,10 @@ import type {
   AcademicYear, 
   CreateAcademicYearRequest, 
   UpdateAcademicYearRequest,
-  AcademicYearFilters 
+  AcademicYearFilters,
+  RolloverPreview,
+  RolloverRequest,
+  RolloverResult,
 } from '../types/academic-year.types';
 
 class AcademicYearService extends ApiService {
@@ -57,5 +60,26 @@ class AcademicYearService extends ApiService {
     return extractApiData<{ success: boolean }>(response);
   }
 }
+
+// Passagem de ano: copiar plano curricular, turmas e atribuições de outro ano
+class AcademicYearRolloverService extends ApiService {
+  constructor() {
+    super('company');
+  }
+
+  async preview(targetUuid: string, sourceUuid: string): Promise<RolloverPreview> {
+    const response = await this.get<unknown>(`/academic-years/${targetUuid}/rollover-preview`, {
+      params: { sourceAcademicYearUuid: sourceUuid },
+    });
+    return extractApiData<RolloverPreview>(response);
+  }
+
+  async execute(targetUuid: string, data: RolloverRequest): Promise<RolloverResult> {
+    const response = await this.post<unknown>(`/academic-years/${targetUuid}/rollover`, data);
+    return extractApiData<RolloverResult>(response);
+  }
+}
+
+export const academicYearRolloverService = new AcademicYearRolloverService();
 
 export const academicYearService = new AcademicYearService();

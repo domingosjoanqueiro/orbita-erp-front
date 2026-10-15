@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { Sidebar } from '@/shared/components/layout/Sidebar/Sidebar';
 import { Header } from '@/shared/components/layout/Header/Header';
+import { NotificationsProvider } from '@/features/notifications/context/NotificationsContext';
 import styles from './layout.module.css';
 
 export default function DashboardLayout({
@@ -38,6 +39,7 @@ export default function DashboardLayout({
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
   return (
+    <NotificationsProvider>
     <div className={styles.layout}>
       <Sidebar
         collapsed={isMobile ? false : sidebarCollapsed}
@@ -56,5 +58,6 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
+    </NotificationsProvider>
   );
 }

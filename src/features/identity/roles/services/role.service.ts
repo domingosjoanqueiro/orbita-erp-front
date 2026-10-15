@@ -1,84 +1,59 @@
-import { ApiService, ApiServiceOptions } from '@/shared/services/api/api.service';
+// src/features/identity/roles/services/role.service.ts
 
-export interface Permission {
-  id: string;
-  uuid: string;
-  name: string;
-  code: string;
-  module: string;
-  description?: string;
-  isActive: boolean;
-}
-
-export interface Role {
-  id: string;
-  uuid: string;
-  name: string;
-  description?: string;
-  companyId: string;
-  isActive: boolean;
-  permissions: Permission[];
-  usersCount?: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateRoleRequest {
-  name: string;
-  description?: string;
-  permissionIds: string[];
-  companyId: string;
-}
-
-export interface UpdateRoleRequest {
-  name?: string;
-  description?: string;
-  permissionIds?: string[];
-  isActive?: boolean;
-}
-
-export interface RoleFilters {
-  search?: string;
-  companyId?: string;
-  isActive?: boolean;
-  page?: number;
-  limit?: number;
-}
+import { ApiService } from '@/shared/services/api/api.service';
+import { extractApiData, extractApiList } from '@/shared/utils/api.utils';
+import type { Role, CreateRoleRequest, UpdateRoleRequest, RoleFilters } from '../types/role.types';
 
 class RoleService extends ApiService {
   private basePath = '/roles';
 
-  async getAll(filters?: RoleFilters): Promise<{ data: Role[]; total: number; page: number; limit: number }> {
-    return this.get<{ data: Role[]; total: number; page: number; limit: number }>(`${this.basePath}`, { params: filters });
+  constructor() {
+    super('company');
+  }
+
+  async getAll(filters?: RoleFilters): Promise<{
+    data: Role[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const response = await this.get<any>(`${this.basePath}`, { params: filters });
+    
+    console.log('📥 RoleService.getAll - Resposta:', response);
+    const extracted = extractApiList<Role>(response);
+    return {
+      data: extracted.data,
+      total: extracted.total,
+      page: extracted.page || filters?.page || 1,
+      limit: extracted.limit || filters?.limit || 10,
+      totalPages: extracted.totalPages || 1,
+    };
   }
 
   async getById(id: string): Promise<Role> {
-    return this.get<Role>(`${this.basePath}/${id}`);
+    const response = await this.get<any>(`${this.basePath}/${id}`);
+    return extractApiData<Role>(response);
   }
 
   async create(data: CreateRoleRequest): Promise<Role> {
-    return this.post<Role>(`${this.basePath}`, data);
+    const response = await this.post<any>(`${this.basePath}`, data);
+    return extractApiData<Role>(response);
   }
 
   async update(id: string, data: UpdateRoleRequest): Promise<Role> {
-    return this.patch<Role>(`${this.basePath}/${id}`, data);
+    const response = await this.patch<any>(`${this.basePath}/${id}`, data);
+    return extractApiData<Role>(response);
   }
 
-  // CORRIGIDO: Usar método com nome diferente para evitar conflito
+  async toggleStatus(id: string, isActive: boolean): Promise<Role> {
+    const response = await this.patch<any>(`${this.basePath}/${id}/status`, { isActive });
+    return extractApiData<Role>(response);
+  }
+
   async remove(id: string): Promise<{ success: boolean }> {
-    return this.delete<{ success: boolean }>(`${this.basePath}/${id}`);
-  }
-
-  async toggleActive(id: string): Promise<Role> {
-    return this.patch<Role>(`${this.basePath}/${id}/toggle-active`);
-  }
-
-  async getPermissions(): Promise<Permission[]> {
-    return this.get<Permission[]>('/permissions');
-  }
-
-  async getByCompany(companyId: string): Promise<{ data: Role[] }> {
-    return this.get<{ data: Role[] }>(`${this.basePath}/company/${companyId}`);
+    const response = await this.delete<any>(`${this.basePath}/${id}`);
+    return extractApiData<{ success: boolean }>(response);
   }
 }
 

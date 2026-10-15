@@ -31,6 +31,8 @@ import { useLoading } from '@/shared/contexts/LoadingContext';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { gradeSubjectService } from '@/features/academic/grade-subjects/services/grade-subject.service';
 import { GradeSubjectManager } from '@/features/academic/grade-subjects/components/GradeSubjectManager';
+import { academicYearService } from '@/features/academic/academic-years/services/academic-year.service';
+import type { AcademicYear } from '@/features/academic/academic-years/types/academic-year.types';
 import type { GradeSubjectWithDetails, GradeSubjectFilters } from '@/features/academic/grade-subjects/types/grade-subject.types';
 import styles from './page.module.css';
 
@@ -89,6 +91,8 @@ export default function GradeSubjectsPage() {
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedGradeUuid, setSelectedGradeUuid] = useState<string | null>(null);
+    // O plano curricular é por ano letivo
+    const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
     const [selectedGradeName, setSelectedGradeName] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
@@ -105,13 +109,31 @@ export default function GradeSubjectsPage() {
         isActive?: boolean;
     }>({ isOpen: false, type: 'delete' });
 
+    // Anos letivos: pré-seleciona o corrente (ativo que contém hoje, senão o mais recente ativo)
+    useEffect(() => {
+        academicYearService
+            .getAll({ limit: 100 })
+            .then(response => {
+                const years = [...response.data].sort((a, b) => b.startDate.localeCompare(a.startDate));
+                setAcademicYears(years);
+                const today = new Date().toISOString().slice(0, 10);
+                const active = years.filter(y => y.isActive);
+                const current =
+                    active.find(y => y.startDate.slice(0, 10) <= today && y.endDate.slice(0, 10) >= today)
+                    ?? active.find(y => y.startDate.slice(0, 10) <= today)
+                    ?? active[0]
+                    ?? years[0];
+                if (current) setFilters(prev => ({ ...prev, academicYearUuid: current.uuid }));
+            })
+            .catch(() => showError('Erro', 'Não foi possível carregar os anos letivos'));
+    }, []);
+
     // Carregar grades
     useEffect(() => {
         const loadGrades = async () => {
             try {
                 const gradesData = await gradeSubjectService.getAllGrades();
                 setGrades(gradesData);
-                console.log('📚 Grades carregadas:', gradesData);
             } catch (error) {
                 console.error('Erro ao carregar grades:', error);
                 showError('Erro', 'Não foi possível carregar as classes');
@@ -183,7 +205,7 @@ export default function GradeSubjectsPage() {
 
     useEffect(() => {
         loadAssociations();
-    }, [filters.page, filters.limit, filters.isActive, filters.gradeUuid]);
+    }, [filters.page, filters.limit, filters.isActive, filters.gradeUuid, filters.academicYearUuid]);
 
     const handleSearch = () => {
         setFilters({ ...filters, page: 1 });
@@ -607,6 +629,17 @@ export default function GradeSubjectsPage() {
                     <span className={styles.totalCount}>{total} associações</span>
                 </div>
                 <div className={styles.headerActions}>
+                    <select
+                        aria-label="Ano letivo"
+                        title="Ano letivo do plano curricular"
+                        value={filters.academicYearUuid ?? ''}
+                        onChange={(e) => setFilters(prev => ({ ...prev, academicYearUuid: e.target.value || undefined, page: 1 }))}
+                        style={{ height: 40, padding: '0 0.75rem', borderRadius: 'var(--radius-lg)', border: '2px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: 600 }}
+                    >
+                        {academicYears.map(y => (
+                            <option key={y.uuid} value={y.uuid}>Ano letivo {y.name}{y.isActive ? '' : ' (inativo)'}</option>
+                        ))}
+                    </select>
                     <Button icon={<Plus size={18} />} onClick={() => handleOpenManager()} className={styles.createButton}>
                         Nova Associação
                     </Button>
@@ -799,8 +832,9 @@ export default function GradeSubjectsPage() {
             >
                 {isModalOpen && selectedGradeUuid && (
                     <GradeSubjectManager
-                        key={selectedGradeUuid}
+                        key={`${selectedGradeUuid}-${filters.academicYearUuid ?? ''}`}
                         gradeUuid={selectedGradeUuid}
+                        academicYearUuid={filters.academicYearUuid}
                         gradeName={selectedGradeName}
                         onClose={handleCloseManager}
                         onSuccess={() => {

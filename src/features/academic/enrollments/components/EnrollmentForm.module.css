@@ -1,0 +1,1229 @@
+/* src/features/academic/enrollments/components/EnrollmentForm.module.css */
+
+/* ============================================================
+   Container Principal
+   ============================================================ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  height: 100%;
+  max-height: 100%;
+  padding: var(--spacing-sm) 0;
+}
+
+/* ============================================================
+   Progress Bar
+   ============================================================ */
+
+.progressContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-secondary);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.progressFill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 8px;
+  height: 8px;
+  background: #F59E0B;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.progressSteps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  position: relative;
+}
+
+.progressStep:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: calc(50% + 20px);
+  right: calc(-50% + 20px);
+  height: 2px;
+  background: var(--bg-secondary);
+  z-index: 0;
+}
+
+.progressStep.active:not(:last-child)::after {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.progressStepCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  color: var(--text-tertiary);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.progressStep.active .progressStepCircle {
+  background: #F59E0B;
+  border-color: #F59E0B;
+  color: white;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.progressStep.current .progressStepCircle {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  border-color: #D97706;
+  color: white;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+  transform: scale(1.1);
+}
+
+.progressStepLabel {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  text-align: center;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.progressStep.active .progressStepLabel {
+  color: var(--text-secondary);
+}
+
+.progressStep.current .progressStepLabel {
+  color: #F59E0B;
+  font-weight: 600;
+}
+
+/* ============================================================
+   Step Container
+   ============================================================ */
+
+.stepContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.stepContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.stepContainer::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 2px;
+}
+
+.stepContainer::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.stepContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stepIconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #F59E0B;
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stepDescription {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+}
+
+/* ============================================================
+   Student Type Selection
+   ============================================================ */
+
+.studentTypeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.studentTypeOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.studentTypeOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  text-align: left;
+}
+
+.studentTypeOption:hover {
+  border-color: var(--text-tertiary);
+  background: var(--bg-hover);
+}
+
+.studentTypeOption.active {
+  border-color: #F59E0B;
+  background: rgba(245, 158, 11, 0.05);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+.studentTypeOption.active .studentTypeCheck {
+  display: block;
+}
+
+.studentTypeIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.studentTypeOption.active .studentTypeIcon {
+  background: #F59E0B;
+  color: white;
+}
+
+.studentTypeLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.studentTypeDesc {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.studentTypeCheck {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #F59E0B;
+}
+
+/* ============================================================
+   Search Section
+   ============================================================ */
+
+.searchSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-md);
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.searchWrapper:focus-within {
+  border-color: #F59E0B;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+.searchIcon {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 1rem 0;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.searchWrapper button {
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Search Results
+   ============================================================ */
+
+.searchResults {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xs);
+}
+
+.searchResults::-webkit-scrollbar {
+  width: 4px;
+}
+
+.searchResults::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 2px;
+}
+
+.searchResults::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.searchResultItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.searchResultItem:hover {
+  background: var(--bg-hover);
+}
+
+.searchResultInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.searchResultName {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.searchResultNumber {
+  font-size: 0.688rem;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+}
+
+.searchResultEmail {
+  font-size: 0.688rem;
+  color: var(--text-tertiary);
+}
+
+.searchResultBadge {
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Selected Student Card
+   ============================================================ */
+
+.selectedStudentCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selectedStudentIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.selectedStudentInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.selectedStudentName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.selectedStudentNumber {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+}
+
+.selectedStudentBadges {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.selectedStudentChange {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.selectedStudentChange:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   Fields
+   ============================================================ */
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.field:last-child {
+  grid-column: 1 / -1;
+}
+
+/* ============================================================
+   Toggle
+   ============================================================ */
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.toggleLabel input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #F59E0B;
+  cursor: pointer;
+}
+
+.toggleHelp {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin: 0;
+  padding-left: 2rem;
+}
+
+/* ============================================================
+   Access Info
+   ============================================================ */
+
+.accessInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+}
+
+.accessLoading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--bg-secondary);
+  border-top: 3px solid #F59E0B;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.accessRoleCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+}
+
+.accessRoleIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.accessRoleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accessRoleName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.accessRoleLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.accessDescription {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.accessDescription strong {
+  color: var(--text-primary);
+}
+
+.accessSubtext {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.accessMissing {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--warning);
+}
+
+.accessMissingIcon {
+  color: var(--warning);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.accessMissingTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.accessMissingText {
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+/* ============================================================
+   Actions
+   ============================================================ */
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background: var(--bg-primary);
+}
+
+.actionsLeft {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.actionsRight {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* ============================================================
+   Credentials Modal
+   ============================================================ */
+
+.credentialsModal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+  text-align: center;
+}
+
+.credentialsSuccessIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.credentialsSuccessIconSvg {
+  color: var(--success);
+}
+
+.credentialsTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.credentialsInfo {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.credentialsStudent {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+}
+
+.credentialsStudentItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.credentialsStudentLabel {
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.credentialsStudentValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.credentialsSubtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.credentialsItems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+}
+
+.credentialsItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.credentialsItem:last-child {
+  border-bottom: none;
+}
+
+.credentialsItemLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.credentialsItemValue {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+}
+
+.credentialsCopyBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.credentialsCopyBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.credentialsCopied {
+  color: var(--success);
+}
+
+.credentialsWarning {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  color: var(--warning);
+}
+
+.credentialsCloseBtn {
+  margin-top: var(--spacing-sm);
+}
+
+/* ============================================================
+   Responsive - Tablet (768px - 1024px)
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .credentialsStudent {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .studentTypeOptions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   Responsive - Mobile (até 768px)
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .studentTypeOptions {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .studentTypeOption {
+    padding: var(--spacing-md);
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .studentTypeIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .studentTypeCheck {
+    top: 8px;
+    right: 8px;
+  }
+
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .field:last-child {
+    grid-column: 1;
+  }
+
+  .searchWrapper {
+    flex-wrap: wrap;
+    padding: var(--spacing-sm);
+  }
+
+  .searchWrapper button {
+    width: 100%;
+  }
+
+  .selectedStudentCard {
+    flex-direction: column;
+    text-align: center;
+    padding: var(--spacing-sm);
+  }
+
+  .selectedStudentBadges {
+    justify-content: center;
+  }
+
+  .credentialsStudent {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .credentialsItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .credentialsItemValue {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .actionsLeft {
+    width: 100%;
+  }
+
+  .actionsLeft button {
+    width: 100%;
+  }
+
+  .actionsRight {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .actionsRight button {
+    width: 100%;
+  }
+
+  .stepHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .progressSteps {
+    gap: var(--spacing-xs);
+  }
+
+  .progressStepLabel {
+    font-size: 0.563rem;
+  }
+
+  .progressStep:not(:last-child)::after {
+    top: 8px;
+    left: calc(50% + 14px);
+    right: calc(-50% + 14px);
+  }
+
+  .accessRoleCard {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .accessMissing {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .searchResults {
+    max-height: 150px;
+  }
+}
+
+/* ============================================================
+   Responsive - Mobile Small (até 480px)
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .stepIconWrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stepIconWrapper svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .stepTitle {
+    font-size: 1rem;
+  }
+
+  .stepDescription {
+    font-size: 0.813rem;
+  }
+
+  .progressStepCircle {
+    width: 20px;
+    height: 20px;
+  }
+
+  .progressStepCircle svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .progressStep:not(:last-child)::after {
+    top: 6px;
+    left: calc(50% + 12px);
+    right: calc(-50% + 12px);
+  }
+
+  .studentTypeOption {
+    padding: var(--spacing-sm);
+  }
+
+  .studentTypeIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .studentTypeLabel {
+    font-size: 0.813rem;
+  }
+
+  .studentTypeDesc {
+    font-size: 0.688rem;
+  }
+
+  .selectedStudentIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .selectedStudentName {
+    font-size: 0.813rem;
+  }
+
+  .accessRoleIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .accessRoleIcon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .accessRoleName {
+    font-size: 1rem;
+  }
+
+  .credentialsStudent {
+    padding: var(--spacing-sm);
+  }
+
+  .credentialsItems {
+    padding: var(--spacing-sm);
+  }
+
+  .credentialsTitle {
+    font-size: 1rem;
+  }
+
+  .credentialsStudentValue {
+    font-size: 0.813rem;
+  }
+}
+
+/* ============================================================
+   Dark Theme
+   ============================================================ */
+
+[data-theme="dark"] .stepIconWrapper {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.15));
+}
+
+[data-theme="dark"] .progressStep:not(:last-child)::after {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .progressStepCircle {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .studentTypeOption {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .studentTypeOption:hover {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .studentTypeOption.active {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+[data-theme="dark"] .studentTypeIcon {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .searchWrapper {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .searchResults {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .selectedStudentCard {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .accessRoleCard {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .accessMissing {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .credentialsStudent {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .credentialsItems {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .credentialsWarning {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="dark"] .selectedStudentIcon {
+  background: linear-gradient(135deg, #D97706, #B45309);
+}
+
+[data-theme="dark"] .accessRoleIcon {
+  background: linear-gradient(135deg, #D97706, #B45309);
+}
+
+[data-theme="dark"] .toggleLabel input[type="checkbox"] {
+  accent-color: #F59E0B;
+}
+
+[data-theme="dark"] .stepContainer::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .stepContainer::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
+[data-theme="dark"] .searchResults::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .searchResults::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
+/* ============================================================
+   Animações
+   ============================================================ */
+
+.stepContent {
+  animation: fadeInContent 0.4s ease forwards;
+}
+
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.credentialsModal {
+  animation: popIn 0.4s ease;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================================
+   Utilidades
+   ============================================================ */
+
+.textMuted {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.mt-sm {
+  margin-top: var(--spacing-sm);
+}
+
+.mb-sm {
+  margin-bottom: var(--spacing-sm);
+}

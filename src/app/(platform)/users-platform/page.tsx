@@ -148,8 +148,7 @@ export default function PlatformUsersPage() {
       }
     }
     
-    console.log('📊 Usuários extraídos:', usersArray);
-    console.log('📊 Total:', totalItems);
+   
     
     const normalizedUsers = usersArray.map((user: any) => ({
       ...user,

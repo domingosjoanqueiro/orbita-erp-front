@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog/ConfirmDialog';
+import { timeAgo, useNotifications } from '@/features/notifications/context/NotificationsContext';
+import { NotificationIcon } from '@/features/notifications/components/NotificationIcon';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -45,6 +48,8 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // Confirmação antes de terminar a sessão
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   // Detectar scroll
   useEffect(() => {
@@ -108,14 +113,21 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
     }
   };
 
-  // Notificações mock
-  const notifications = [
-    { id: 1, title: 'Nova empresa registrada', time: '5 min atrás', read: false, type: 'company' },
-    { id: 2, title: 'Novo usuário criado', time: '1 hora atrás', read: false, type: 'user' },
-    { id: 3, title: 'Sistema atualizado', time: '3 horas atrás', read: true, type: 'system' },
-  ];
+  // Notificações reais (só no painel da empresa; null no painel da plataforma)
+  const notifications = useNotifications();
+  const unreadCount = notifications?.unreadCount ?? 0;
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const openNotification = async (uuid: string, link: string | null, isRead: boolean) => {
+    setIsNotificationsOpen(false);
+    if (!isRead) {
+      try {
+        await notifications?.markRead(uuid);
+      } catch {
+        // continua para a ligação mesmo que não consiga marcar como lida
+      }
+    }
+    if (link) router.push(link);
+  };
 
   // Menu items para dropdown
   const getMenuItems = () => {
@@ -138,6 +150,7 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
   const menuItems = getMenuItems();
 
   return (
+    <>
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
       {/* Left Section */}
       <div className={styles.left}>
@@ -191,15 +204,19 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
         </button>
 
         {/* Notifications */}
+        {notifications && (
         <div className={styles.notificationWrapper}>
           <button
             className={styles.iconButton}
             aria-label="Notificações"
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            onClick={() => {
+              if (!isNotificationsOpen) notifications.refresh();
+              setIsNotificationsOpen(!isNotificationsOpen);
+            }}
           >
             <Bell size={18} />
             {unreadCount > 0 && (
-              <span className={styles.notificationBadge}>{unreadCount}</span>
+              <span className={styles.notificationBadge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
             )}
           </button>
 
@@ -207,31 +224,52 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
             <div className={styles.notificationDropdown}>
               <div className={styles.notificationHeader}>
                 <span className={styles.notificationTitle}>Notificações</span>
-                <button className={styles.notificationMarkAll}>
-                  Marcar todas como lidas
-                </button>
+                {unreadCount > 0 && (
+                  <button className={styles.notificationMarkAll} onClick={() => notifications.markAllRead()}>
+                    Marcar todas como lidas
+                  </button>
+                )}
               </div>
               <div className={styles.notificationList}>
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`${styles.notificationItem} ${!notif.read ? styles.unread : ''}`}
-                  >
+                {notifications.latest.length === 0 && (
+                  <div className={styles.notificationItem}>
                     <div className={styles.notificationContent}>
-                      <span className={styles.notificationText}>{notif.title}</span>
-                      <span className={styles.notificationTime}>{notif.time}</span>
+                      <span className={styles.notificationText}>Não tem notificações.</span>
                     </div>
                   </div>
+                )}
+                {notifications.latest.map((notif) => (
+                  <button
+                    key={notif.uuid}
+                    type="button"
+                    className={`${styles.notificationItem} ${!notif.isRead ? styles.unread : ''}`}
+                    style={{ width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start' }}
+                    onClick={() => openNotification(notif.uuid, notif.link, notif.isRead)}
+                  >
+                    <NotificationIcon type={notif.type} size={32} />
+                    <div className={styles.notificationContent}>
+                      <span className={styles.notificationText}><strong>{notif.title}</strong></span>
+                      <span className={styles.notificationText} style={{ fontSize: '0.78rem', opacity: 0.85 }}>{notif.message}</span>
+                      <span className={styles.notificationTime}>{timeAgo(notif.createdAt)}</span>
+                    </div>
+                  </button>
                 ))}
               </div>
               <div className={styles.notificationFooter}>
-                <button className={styles.notificationViewAll}>
+                <button
+                  className={styles.notificationViewAll}
+                  onClick={() => {
+                    setIsNotificationsOpen(false);
+                    router.push('/notifications');
+                  }}
+                >
                   Ver todas as notificações
                 </button>
               </div>
             </div>
           )}
         </div>
+        )}
 
         {/* User Menu */}
         <div className={styles.userMenu}>
@@ -292,7 +330,10 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
               <hr className={styles.dropdownDivider} />
               <button
                 className={`${styles.dropdownItem} ${styles.danger}`}
-                onClick={handleLogout}
+                onClick={() => {
+                  setIsUserMenuOpen(false);
+                  setConfirmLogout(true);
+                }}
               >
                 <LogOut size={16} />
                 Sair
@@ -370,5 +411,19 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
         </div>
       )}
     </header>
+    <ConfirmDialog
+      isOpen={confirmLogout}
+      onClose={() => setConfirmLogout(false)}
+      onConfirm={() => {
+        setConfirmLogout(false);
+        handleLogout();
+      }}
+      title="Terminar sessão"
+      message="Tem a certeza de que pretende sair do sistema?"
+      type="warning"
+      confirmText="Sair"
+      cancelText="Cancelar"
+    />
+    </>
   );
 };

@@ -7,8 +7,8 @@ import type { Permission, PermissionFilters } from '../types/permission.types';
 class PermissionService extends ApiService {
   private basePath = '/permissions';
 
-  constructor() {
-    super('company');
+  constructor(authType: 'platform' | 'company' = 'platform') {
+    super(authType);
   }
 
   async getAll(filters?: PermissionFilters): Promise<{
@@ -19,8 +19,6 @@ class PermissionService extends ApiService {
     totalPages: number;
   }> {
     const response = await this.get<any>(`${this.basePath}`, { params: filters });
-    
-    console.log('📥 PermissionService.getAll - Resposta:', response);
     const extracted = extractApiList<Permission>(response);
     return {
       data: extracted.data,
@@ -42,4 +40,8 @@ class PermissionService extends ApiService {
   }
 }
 
-export const permissionService = new PermissionService();
+// Painel da plataforma (super admin)
+export const permissionService = new PermissionService('platform');
+
+// Painel da empresa: leitura do catálogo para montar as roles
+export const companyPermissionService = new PermissionService('company');

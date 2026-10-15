@@ -7,7 +7,6 @@ const COMPANY_TOKEN_KEY = 'accessTokenorbitavisionapi@2026';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  console.log('🔍 Middleware - Pathname:', pathname);
 
   // Rotas da plataforma (Super Admin)
   const platformRoutes = ['/platform-login', '/super-admin', '/platform', '/companies', '/users-platform', '/roles-platform', ];
@@ -18,9 +17,7 @@ export function middleware(request: NextRequest) {
                          pathname === '/dashboard' ||
                          pathname === '/login' ||
                          pathname === '/change-password' ||
-                         pathname.startsWith('/students') ||
-                         pathname.startsWith('/teachers') ||
-                         pathname.startsWith('/enrollments') ||
+                         pathname.startsWith('/academic/enrollments') ||
                          pathname.startsWith('/users') ||
                          pathname.startsWith('/roles') ||
                          pathname.startsWith('/company/info')||
@@ -31,18 +28,23 @@ export function middleware(request: NextRequest) {
                          pathname.startsWith('/academic/teachers')||
                          pathname.startsWith('/academic/students')||
                          pathname.startsWith('/academic/enrollments')||
+                         pathname.startsWith('/academic/teacher-assignments')||
                          pathname.startsWith('/academic/grades')||
                          pathname.startsWith('/academic/classes') ||
-                         pathname.startsWith('/academic/grade-subjects');
+                         pathname.startsWith('/academic/grade-subjects')||
+                         pathname.startsWith('/academic/assessments')||
+                         pathname.startsWith('/academic/my-classes')||
+                         pathname.startsWith('/notifications')||
+                         pathname.startsWith('/academic/assessment-rules')||
+                         pathname.startsWith('/attendance')||
+                         pathname.startsWith('/academic-reports')||
+                         pathname.startsWith('/transcripts');
 
   // Tokens
   const platformToken = request.cookies.get(PLATFORM_TOKEN_KEY)?.value;
   const companyToken = request.cookies.get(COMPANY_TOKEN_KEY)?.value;
 
-  console.log('🔍 Middleware - Tokens:', { 
-    hasPlatformToken: !!platformToken, 
-    hasCompanyToken: !!companyToken 
-  });
+ 
 
   // ============ PLATFORM ROUTES ============
   if (isPlatformRoute) {
@@ -64,7 +66,6 @@ export function middleware(request: NextRequest) {
     // Página de login da empresa
     if (pathname === '/login') {
       if (companyToken) {
-        console.log('🔍 Middleware - Redirecionando de login para dashboard');
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
       return NextResponse.next();
@@ -80,14 +81,12 @@ export function middleware(request: NextRequest) {
 
     // Rotas protegidas da empresa
     if (!companyToken) {
-      console.log('🔍 Middleware - Redirecionando para login (sem token)');
       return NextResponse.redirect(new URL('/login', request.url));
     }
     return NextResponse.next();
   }
 
   // Fallback - redirecionar para login
-  console.log('🔍 Middleware - Fallback redirecionando para login');
   return NextResponse.redirect(new URL('/login', request.url));
 }
 

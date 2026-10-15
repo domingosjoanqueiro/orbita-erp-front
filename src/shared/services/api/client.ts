@@ -74,18 +74,29 @@ class ApiClient {
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        const refreshPath = this.authType === 'platform'
+          ? '/system/auth/refresh'
+          : '/auth/refresh';
+        // Um 401 do próprio pedido de renovação não pode disparar nova renovação
+        const isRefreshRequest = typeof originalRequest?.url === 'string'
+          && originalRequest.url.includes(refreshPath);
+
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshRequest) {
           originalRequest._retry = true;
           try {
             const refreshToken = this.getRefreshToken();
             if (refreshToken) {
-              const refreshPath = this.authType === 'platform' 
-                ? '/system/auth/refresh' 
-                : '/auth/refresh';
-              
               const response = await this.client.post(refreshPath, { refreshToken });
-              const { accessToken } = response.data;
+              // A API responde { success, message, data: { accessToken, refreshToken } }
+              const tokens = response.data?.data ?? response.data;
+              const accessToken: string | undefined = tokens?.accessToken;
+              if (!accessToken) {
+                throw new Error('Resposta de renovação de sessão inválida');
+              }
               this.setAccessToken(accessToken);
+              if (tokens.refreshToken) {
+                this.setRefreshToken(tokens.refreshToken);
+              }
               originalRequest.headers.Authorization = `Bearer ${accessToken}`;
               return this.client(originalRequest);
             }
@@ -126,10 +137,22 @@ class ApiClient {
 
   private setAccessToken(token: string): void {
     if (typeof window !== 'undefined') {
-      const key = this.authType === 'platform' 
-        ? TOKEN_KEYS.platform 
+      const key = this.authType === 'platform'
+        ? TOKEN_KEYS.platform
         : TOKEN_KEYS.company;
       localStorage.setItem(key, token);
+      // O middleware do Next valida a sessão pelo cookie
+      document.cookie = `${key}=${token}; path=/; max-age=3600; SameSite=Lax`;
+    }
+  }
+
+  private setRefreshToken(token: string): void {
+    if (typeof window !== 'undefined') {
+      const key = this.authType === 'platform'
+        ? TOKEN_KEYS.platformRefresh
+        : TOKEN_KEYS.companyRefresh;
+      localStorage.setItem(key, token);
+      document.cookie = `${key}=${token}; path=/; max-age=604800; SameSite=Lax`;
     }
   }
 

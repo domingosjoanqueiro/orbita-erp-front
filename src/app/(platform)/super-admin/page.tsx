@@ -49,7 +49,6 @@ export default function SuperAdminDashboard() {
         platformDashboardService.getActivities(),
       ]);
 
-      console.log('statsData=====', statsData);
       setStats(statsData);
       setActivities(activitiesData.data || []);
       setLastUpdated(new Date());

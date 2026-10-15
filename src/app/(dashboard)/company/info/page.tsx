@@ -88,7 +88,6 @@ export default function CompanyInfoPage() {
     const data = response.data || response;
     
     // Log para debug
-    console.log('📊 Dados brutos da API:', data);
     
     // Mapear os campos de snake_case para camelCase
     return {
@@ -141,10 +140,8 @@ export default function CompanyInfoPage() {
     try {
       startLoading();
       const response = await companyInfoService.getInfo();
-      console.log('📥 Resposta da API (getInfo):', response);
       
       const data = extractData(response);
-      console.log('📊 Dados mapeados:', data);
       
       setCompany(data);
       setFormData(data);
@@ -171,13 +168,10 @@ export default function CompanyInfoPage() {
 
       const payload = preparePayload(formData);
       
-      console.log('📤 Enviando payload:', payload);
 
       const response = await companyInfoService.updateInfo(payload);
-      console.log('📥 Resposta da API (update):', response);
       
       const updatedData = extractData(response);
-      console.log('📊 Dados atualizados mapeados:', updatedData);
       
       setCompany(updatedData);
       setFormData(updatedData);

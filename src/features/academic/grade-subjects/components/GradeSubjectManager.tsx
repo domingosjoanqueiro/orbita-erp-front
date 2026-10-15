@@ -31,6 +31,8 @@ interface SubjectItem {
 
 interface GradeSubjectManagerProps {
     gradeUuid: string;
+    // Ano letivo do plano curricular a editar
+    academicYearUuid?: string;
     gradeName: string;
     onClose: () => void;
     onSuccess?: () => void;
@@ -38,6 +40,7 @@ interface GradeSubjectManagerProps {
 
 export const GradeSubjectManager: React.FC<GradeSubjectManagerProps> = ({
     gradeUuid,
+    academicYearUuid,
     gradeName,
     onClose,
     onSuccess,
@@ -65,7 +68,7 @@ export const GradeSubjectManager: React.FC<GradeSubjectManagerProps> = ({
             return;
         }
         loadData();
-    }, [gradeUuid]);
+    }, [gradeUuid, academicYearUuid]);
 
     useEffect(() => {
         const term = searchTerm.trim().toLowerCase();
@@ -87,8 +90,8 @@ export const GradeSubjectManager: React.FC<GradeSubjectManagerProps> = ({
             setLoadError(null);
 
             const [assigned, available] = await Promise.all([
-                gradeSubjectService.getAssignedSubjects(gradeUuid),
-                gradeSubjectService.getAvailableSubjects(gradeUuid),
+                gradeSubjectService.getAssignedSubjects(gradeUuid, academicYearUuid),
+                gradeSubjectService.getAvailableSubjects(gradeUuid, academicYearUuid),
             ]);
 
             const assignedList = assigned || [];
@@ -244,6 +247,7 @@ export const GradeSubjectManager: React.FC<GradeSubjectManagerProps> = ({
                 operations.push(
                     gradeSubjectService.bulkCreateWithWorkload({
                         gradeUuid,
+                        academicYearUuid,
                         subjects: subjectsWithWorkload,
                     })
                 );
@@ -262,6 +266,7 @@ export const GradeSubjectManager: React.FC<GradeSubjectManagerProps> = ({
                 operations.push(
                     gradeSubjectService.bulkRemove({
                         gradeUuid,
+                        academicYearUuid,
                         subjectUuids: toRemove,
                     })
                 );

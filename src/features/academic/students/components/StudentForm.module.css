@@ -1,22 +1,222 @@
+/* src/features/academic/students/components/StudentForm.module.css */
+
+/* ============================================================
+   Container Principal
+   ============================================================ */
+
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  height: 100%;
+  max-height: 100%;
+  padding: var(--spacing-sm) 0;
 }
 
-.section {
+/* ============================================================
+   Progress Bar
+   ============================================================ */
+
+.progressContainer {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-}
-
-.sectionTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-md);
   border-bottom: 1px solid var(--border-color);
 }
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-secondary);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.progressFill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 8px;
+  height: 8px;
+  background: #2563EB;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+}
+
+.progressSteps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  position: relative;
+}
+
+.progressStep:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: calc(50% + 20px);
+  right: calc(-50% + 20px);
+  height: 2px;
+  background: var(--bg-secondary);
+  z-index: 0;
+}
+
+.progressStep.active:not(:last-child)::after {
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+}
+
+.progressStepCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  color: var(--text-tertiary);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.progressStep.active .progressStepCircle {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: white;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+}
+
+.progressStep.current .progressStepCircle {
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  border-color: #1D4ED8;
+  color: white;
+  box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
+  transform: scale(1.1);
+}
+
+.progressStepLabel {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  text-align: center;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.progressStep.active .progressStepLabel {
+  color: var(--text-secondary);
+}
+
+.progressStep.current .progressStepLabel {
+  color: #2563EB;
+  font-weight: 600;
+}
+
+/* ============================================================
+   Step Container
+   ============================================================ */
+
+.stepContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.stepContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.stepContainer::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 2px;
+}
+
+.stepContainer::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.stepContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stepIconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(29, 78, 216, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563EB;
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stepDescription {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+}
+
+/* ============================================================
+   Fields
+   ============================================================ */
 
 .fields {
   display: grid;
@@ -30,16 +230,461 @@
   gap: var(--spacing-xs);
 }
 
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--border-color);
+.field:last-child {
+  grid-column: 1 / -1;
 }
 
-@media (max-width: 640px) {
+/* ============================================================
+   Toggle
+   ============================================================ */
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.toggleLabel input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #2563EB;
+  cursor: pointer;
+}
+
+.toggleHelp {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin: 0;
+  padding-left: 2rem;
+}
+
+/* ============================================================
+   Acesso ao Sistema
+   ============================================================ */
+
+.accessInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+}
+
+.accessLoading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--bg-secondary);
+  border-top: 3px solid #2563EB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.accessRoleCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+}
+
+.accessRoleIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.accessRoleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accessRoleName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.accessRoleLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.accessDescription {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.accessDescription strong {
+  color: var(--text-primary);
+}
+
+.accessSubtext {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.accessMissing {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--warning);
+}
+
+.accessMissingIcon {
+  color: var(--warning);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.accessMissingTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.accessMissingText {
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+/* ============================================================
+   Actions
+   ============================================================ */
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background: var(--bg-primary);
+}
+
+.actionsLeft {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.actionsRight {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* ============================================================
+   Credentials Modal
+   ============================================================ */
+
+.credentialsModal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+  text-align: center;
+}
+
+.credentialsSuccessIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.credentialsSuccessIconSvg {
+  color: var(--success);
+}
+
+.credentialsTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.credentialsInfo {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.credentialsSubtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.credentialsItems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+}
+
+.credentialsItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.credentialsItem:last-child {
+  border-bottom: none;
+}
+
+.credentialsItemLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.credentialsItemValue {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+}
+
+.credentialsCopyBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.credentialsCopyBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.credentialsCopied {
+  color: var(--success);
+}
+
+.credentialsWarning {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  color: var(--warning);
+}
+
+.credentialsCloseBtn {
+  margin-top: var(--spacing-sm);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 768px) {
   .fields {
     grid-template-columns: 1fr;
   }
+
+  .field:last-child {
+    grid-column: 1;
+  }
+
+  .progressSteps {
+    gap: var(--spacing-xs);
+  }
+
+  .progressStepLabel {
+    font-size: 0.563rem;
+  }
+
+  .progressStep:not(:last-child)::after {
+    top: 8px;
+    left: calc(50% + 14px);
+    right: calc(-50% + 14px);
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .actionsLeft {
+    width: 100%;
+  }
+
+  .actionsLeft button {
+    width: 100%;
+  }
+
+  .actionsRight {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .actionsRight button {
+    width: 100%;
+  }
+
+  .stepHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .accessRoleCard {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .accessMissing {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .credentialsItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .credentialsItemValue {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
+
+@media (max-width: 480px) {
+  .stepIconWrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stepIconWrapper svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .stepTitle {
+    font-size: 1rem;
+  }
+
+  .stepDescription {
+    font-size: 0.813rem;
+  }
+
+  .progressStepCircle {
+    width: 20px;
+    height: 20px;
+  }
+
+  .progressStepCircle svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .progressStep:not(:last-child)::after {
+    top: 6px;
+    left: calc(50% + 12px);
+    right: calc(-50% + 12px);
+  }
+
+  .accessRoleIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .accessRoleIcon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .accessRoleName {
+    font-size: 1rem;
+  }
+}
+
+/* ============================================================
+   Dark Theme
+   ============================================================ */
+
+[data-theme="dark"] .stepIconWrapper {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(29, 78, 216, 0.15));
+}
+
+[data-theme="dark"] .progressStep:not(:last-child)::after {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .progressStepCircle {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .accessRoleCard {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .accessMissing {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .credentialsItems {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .credentialsWarning {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+

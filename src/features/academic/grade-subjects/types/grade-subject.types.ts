@@ -31,6 +31,8 @@ export interface UpdateGradeSubjectRequest {
 }
 
 export interface GradeSubjectFilters {
+  // Plano curricular do ano letivo (sem ele: ano letivo corrente)
+  academicYearUuid?: string;
   search?: string;
   gradeUuid?: string;
   subjectUuid?: string;
@@ -49,6 +51,7 @@ export interface GradeSubjectWithDetails extends GradeSubject {
 // ✅ Bulk Create com carga horária individual
 export interface BulkCreateWithWorkloadRequest {
   gradeUuid: string;
+  academicYearUuid?: string;
   subjects: {
     subjectUuid: string;
     weeklyWorkload: number;
@@ -58,6 +61,7 @@ export interface BulkCreateWithWorkloadRequest {
 // ✅ Bulk Remove
 export interface BulkRemoveGradeSubjectRequest {
   gradeUuid: string;
+  academicYearUuid?: string;
   subjectUuids: string[];
 }
 

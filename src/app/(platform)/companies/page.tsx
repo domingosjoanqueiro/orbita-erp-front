@@ -94,7 +94,6 @@ export default function CompaniesPage() {
         search: searchTerm || undefined,
       });
       
-      console.log('📊 Resposta da API (raw):', response);
       
       // Garantir que response seja um objeto
       const responseData = response || {};
@@ -139,8 +138,7 @@ export default function CompaniesPage() {
         }
       }
       
-      console.log('📊 Companies extraídas:', companiesArray);
-      console.log('📊 Total:', totalItems);
+   
       
       const normalizedCompanies = companiesArray.map((company: any) => ({
         ...company,

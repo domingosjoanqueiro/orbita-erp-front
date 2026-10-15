@@ -18,8 +18,13 @@ import {
   LayoutGrid,
   List,
   BookOpen,
-  Eye,
-  EyeOff,
+  UserCog,
+  Save,
+  ChevronRight,
+  ChevronLeft,
+  Lock,
+  Shield,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button/Button';
 import { Input } from '@/shared/components/ui/Input/Input';
@@ -28,14 +33,22 @@ import { Table } from '@/shared/components/ui/Table/Table';
 import { Modal } from '@/shared/components/ui/Modal/Modal';
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog/ConfirmDialog';
 import { SkeletonCard } from '@/shared/components/ui/Skeleton/SkeletonCard';
+import { Select } from '@/shared/components/ui/Select/Select';
 import { useLoading } from '@/shared/contexts/LoadingContext';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { programSettingService } from '@/features/academic/program-settings/services/program-setting.service';
 import { ProgramSettingForm } from '@/features/academic/program-settings/components/ProgramSettingForm';
+import { academicAccessSettingsService } from '@/features/academic/academic-access-settings/services/academic-access-settings.service';
+import { roleService } from '@/features/identity/roles/services/role.service';
 import type { ProgramAcademicSetting, ProgramSettingFilters } from '@/features/academic/program-settings/types/program-setting.types';
+import type { Role } from '@/features/identity/roles/types/role.types';
 import styles from './page.module.css';
 
 type ViewMode = 'cards' | 'table';
+
+// ============================================================
+// Helpers
+// ============================================================
 
 const isActiveBoolean = (value: any): boolean => {
   if (value === undefined || value === null) return false;
@@ -91,10 +104,184 @@ const getPublishModeBadge = (mode: string) => {
   );
 };
 
+const formatDate = (date: string) => {
+  if (!date) return 'N/A';
+  return new Date(date).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
+// ============================================================
+// Componente de Configuração de Acesso (Collapsible)
+// ============================================================
+
+interface AccessSettingsSectionProps {
+  roles: Role[];
+  studentRoleId: string;
+  teacherRoleId: string;
+  onStudentRoleChange: (value: string) => void;
+  onTeacherRoleChange: (value: string) => void;
+  onSave: () => void;
+  isLoading: boolean;
+  isSaving: boolean;
+}
+
+// AccessSettingsSection com logs para debug
+
+const AccessSettingsSection: React.FC<AccessSettingsSectionProps> = ({
+  roles,
+  studentRoleId,
+  teacherRoleId,
+  onStudentRoleChange,
+  onTeacherRoleChange,
+  onSave,
+  isLoading,
+  isSaving,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // ✅ Log para debug
+  
+
+  const roleOptions = roles.map(role => ({
+    value: String(role.id),
+    label: role.name,
+  }));
+
+  // ✅ Encontrar os nomes das roles selecionadas para exibir no status
+  const selectedStudentRole = roles.find(r => String(r.id) === studentRoleId);
+  const selectedTeacherRole = roles.find(r => String(r.id) === teacherRoleId);
+  const isConfigured = !!(studentRoleId && teacherRoleId);
+
+  if (isLoading) {
+    return (
+      <div className={styles.accessSettingsContainer}>
+        <div className={styles.accessSettingsHeader}>
+          <div className={styles.accessSettingsHeaderLeft}>
+            <UserCog size={18} className={styles.accessSettingsIcon} />
+            <span className={styles.accessSettingsLabel}>Configuração de Acesso Académico</span>
+          </div>
+          <div className={styles.accessSettingsSkeletonBadge} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.accessSettingsContainer}>
+      <div 
+        className={styles.accessSettingsHeader}
+        onClick={() => setIsExpanded(!isExpanded)}
+        role="button"
+        tabIndex={0}
+      >
+        <div className={styles.accessSettingsHeaderLeft}>
+          <UserCog size={18} className={styles.accessSettingsIcon} />
+          <span className={styles.accessSettingsLabel}>Configuração de Acesso Académico</span>
+          <Badge variant="neutral" size="sm">
+            <Lock size={10} />
+            Administração
+          </Badge>
+        </div>
+        <div className={styles.accessSettingsHeaderRight}>
+          <span className={styles.accessSettingsStatus}>
+            {isConfigured ? (
+              <span className={styles.accessSettingsConfigured}>
+                <CheckCircle size={12} />
+                {selectedStudentRole?.name} · {selectedTeacherRole?.name}
+              </span>
+            ) : (
+              <span className={styles.accessSettingsNotConfigured}>
+                <AlertCircle size={12} />
+                Não configurado
+              </span>
+            )}
+          </span>
+          <button className={styles.accessSettingsToggle}>
+            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className={styles.accessSettingsBody}>
+          <p className={styles.accessSettingsDescription}>
+            Defina quais perfis serão utilizados para estudantes e professores no módulo Académico.
+          </p>
+
+          <div className={styles.accessSettingsForm}>
+            <div className={styles.accessSettingsRow}>
+              <div className={styles.accessSettingsField}>
+                <label className={styles.accessSettingsLabel}>
+                  Role de Estudante
+                </label>
+                <Select
+                  value={studentRoleId}
+                  onChange={(e) => onStudentRoleChange(e.target.value)}
+                  options={[
+                    { value: '', label: 'Selecione uma role...' },
+                    ...roleOptions,
+                  ]}
+                  fullWidth
+                />
+              </div>
+
+              <div className={styles.accessSettingsField}>
+                <label className={styles.accessSettingsLabel}>
+                  Role de Professor
+                </label>
+                <Select
+                  value={teacherRoleId}
+                  onChange={(e) => onTeacherRoleChange(e.target.value)}
+                  options={[
+                    { value: '', label: 'Selecione uma role...' },
+                    ...roleOptions,
+                  ]}
+                  fullWidth
+                />
+              </div>
+            </div>
+
+            <div className={styles.accessSettingsActions}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onSave}
+                isLoading={isSaving}
+                icon={<Save size={16} />}
+              >
+                Guardar alterações
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================
+// Componente Principal
+// ============================================================
+
 export default function ProgramSettingsPage() {
   const { startLoading, stopLoading, isLoading } = useLoading();
   const { showSuccess, showError } = useToast();
 
+  // ============================================================
+  // State - Academic Access Settings
+  // ============================================================
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [studentRoleId, setStudentRoleId] = useState<string>('');
+  const [teacherRoleId, setTeacherRoleId] = useState<string>('');
+  const [isLoadingAccessSettings, setIsLoadingAccessSettings] = useState(true);
+  const [isSavingAccessSettings, setIsSavingAccessSettings] = useState(false);
+
+  // ============================================================
+  // State - Program Settings
+  // ============================================================
   const [settings, setSettings] = useState<ProgramAcademicSetting[]>([]);
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<ProgramSettingFilters>({ page: 1, limit: 10 });
@@ -103,7 +290,6 @@ export default function ProgramSettingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
-
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     type: 'delete' | 'toggle';
@@ -112,6 +298,38 @@ export default function ProgramSettingsPage() {
     isActive?: boolean;
   }>({ isOpen: false, type: 'delete' });
 
+  // ============================================================
+  // Load Functions
+  // ============================================================
+
+  const loadRoles = async () => {
+    try {
+      const response = await roleService.getAll({ limit: 100 });
+      setRoles(response.data || []);
+    } catch (error) {
+      console.error('Erro ao carregar roles:', error);
+      showError('Erro', 'Não foi possível carregar as roles');
+    }
+  };
+
+// No page.tsx - Atualizar a função loadAcademicSettings
+
+const loadAcademicSettings = async () => {
+  try {
+    setIsLoadingAccessSettings(true);
+    const response = await academicAccessSettingsService.getAcademicSettings();
+    
+    
+    // ✅ Garantir que os valores sejam strings para os selects
+    setStudentRoleId(response.studentRoleId ? String(response.studentRoleId) : '');
+    setTeacherRoleId(response.teacherRoleId ? String(response.teacherRoleId) : '');
+  } catch (error) {
+    console.error('Erro ao carregar configuração académica:', error);
+  } finally {
+    setIsLoadingAccessSettings(false);
+  }
+};
+
   const loadSettings = async () => {
     try {
       startLoading();
@@ -119,8 +337,6 @@ export default function ProgramSettingsPage() {
         ...filters,
         search: searchTerm || undefined,
       });
-
-      console.log('📥 ProgramSettingService.getAll - Resposta:', response);
       const dataArray = response?.data || [];
       setSettings(dataArray.map((s: any) => ({ ...s, isActive: isActiveBoolean(s.isActive) })));
       setTotal(response?.total || 0);
@@ -134,9 +350,78 @@ export default function ProgramSettingsPage() {
     }
   };
 
+  // ============================================================
+  // Effects
+  // ============================================================
+
+  useEffect(() => {
+    loadRoles();
+    loadAcademicSettings();
+  }, []);
+
   useEffect(() => {
     loadSettings();
   }, [filters.page, filters.limit, filters.isActive]);
+
+  // ============================================================
+  // Handlers - Academic Access Settings
+  // ============================================================
+
+// No page.tsx - Atualizar o handleSaveAcademicSettings
+
+const handleSaveAcademicSettings = async () => {
+  // Validações
+  if (!studentRoleId) {
+    showError('Validação', 'Selecione uma Role para Estudante');
+    return;
+  }
+
+  if (!teacherRoleId) {
+    showError('Validação', 'Selecione uma Role para Professor');
+    return;
+  }
+
+  if (studentRoleId === teacherRoleId) {
+    showError('Validação', 'Selecione Roles diferentes para estudante e professor');
+    return;
+  }
+
+  try {
+    setIsSavingAccessSettings(true);
+    startLoading();
+
+    const payload = {
+      studentRoleId: Number(studentRoleId),
+      teacherRoleId: Number(teacherRoleId),
+    };
+
+
+    const response = await academicAccessSettingsService.updateAcademicSettings(payload);
+    
+    
+    // ✅ Atualizar os selects com os valores retornados
+    setStudentRoleId(response.studentRoleId ? String(response.studentRoleId) : '');
+    setTeacherRoleId(response.teacherRoleId ? String(response.teacherRoleId) : '');
+    
+    showSuccess(
+      'Configuração salva',
+      'Configuração de acesso académico atualizada com sucesso'
+    );
+  } catch (error: any) {
+    console.error('Erro ao salvar configuração:', error);
+    showError(
+      'Erro',
+      error.response?.data?.message || 'Erro ao salvar configuração'
+    );
+  } finally {
+    setIsSavingAccessSettings(false);
+    stopLoading();
+  }
+};
+
+  // ============================================================
+  // Handlers - Program Settings
+  // ============================================================
 
   const handleSearch = () => {
     setFilters({ ...filters, page: 1 });
@@ -194,16 +479,10 @@ export default function ProgramSettingsPage() {
     }
   };
 
-  const formatDate = (date: string) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
+  // ============================================================
+  // Columns
+  // ============================================================
 
-  // Definição das colunas para a tabela
   const columns = [
     {
       key: 'program',
@@ -278,6 +557,10 @@ export default function ProgramSettingsPage() {
     },
   ];
 
+  // ============================================================
+  // Render - Empty State
+  // ============================================================
+
   const EmptyState = () => (
     <div className={styles.emptyState}>
       <div className={styles.emptyIconWrapper}>
@@ -294,6 +577,10 @@ export default function ProgramSettingsPage() {
       </Button>
     </div>
   );
+
+  // ============================================================
+  // Render - Cards View
+  // ============================================================
 
   const renderCardsView = () => {
     const items = Array.isArray(settings) ? settings : [];
@@ -389,6 +676,10 @@ export default function ProgramSettingsPage() {
     );
   };
 
+  // ============================================================
+  // Render - Table View
+  // ============================================================
+
   const renderTableView = () => {
     const items = Array.isArray(settings) ? settings : [];
     if (items.length === 0) return <EmptyState />;
@@ -403,6 +694,10 @@ export default function ProgramSettingsPage() {
       </div>
     );
   };
+
+  // ============================================================
+  // Main Render
+  // ============================================================
 
   if (isLoading && settings.length === 0) {
     return (
@@ -427,6 +722,7 @@ export default function ProgramSettingsPage() {
 
   return (
     <div className={styles.page}>
+      {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.headerIcon}>
@@ -447,6 +743,19 @@ export default function ProgramSettingsPage() {
         </div>
       </div>
 
+      {/* Academic Access Settings - Collapsible */}
+      <AccessSettingsSection
+        roles={roles}
+        studentRoleId={studentRoleId}
+        teacherRoleId={teacherRoleId}
+        onStudentRoleChange={setStudentRoleId}
+        onTeacherRoleChange={setTeacherRoleId}
+        onSave={handleSaveAcademicSettings}
+        isLoading={isLoadingAccessSettings}
+        isSaving={isSavingAccessSettings}
+      />
+
+      {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
           <div className={styles.searchWrapper}>
@@ -493,6 +802,7 @@ export default function ProgramSettingsPage() {
         </div>
       </div>
 
+      {/* Filters */}
       {showFilters && (
         <div className={styles.filtersPanel}>
           <div className={styles.filterGroup}>
@@ -521,10 +831,12 @@ export default function ProgramSettingsPage() {
         </div>
       )}
 
+      {/* Content */}
       <div className={styles.content}>
         {viewMode === 'cards' ? renderCardsView() : renderTableView()}
       </div>
 
+      {/* Confirm Dialog */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         onClose={() => setConfirmDialog({ isOpen: false, type: 'delete' })}
@@ -554,6 +866,7 @@ export default function ProgramSettingsPage() {
         isLoading={isLoading}
       />
 
+      {/* Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

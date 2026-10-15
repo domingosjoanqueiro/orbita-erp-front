@@ -106,13 +106,13 @@ class GradeSubjectService extends ApiService {
   }
 
   async getAvailableSubjects(
-    gradeUuid: string
+    gradeUuid: string,
+    academicYearUuid?: string
   ): Promise<{ id: number; uuid: string; name: string; code: string; is_active: boolean }[]> {
     const response = await this.get<any>(
-      `${this.basePath}/grade/${gradeUuid}/available-subjects`
+      `${this.basePath}/grade/${gradeUuid}/available-subjects`,
+      { params: { academicYearUuid } }
     );
-
-    console.log('📥 Available Subjects Response:', response);
 
     const extracted = extractApiData<{
       grade: { id: number; uuid: string; name: string };
@@ -123,13 +123,13 @@ class GradeSubjectService extends ApiService {
   }
 
   async getAssignedSubjects(
-    gradeUuid: string
+    gradeUuid: string,
+    academicYearUuid?: string
   ): Promise<{ id: number; uuid: string; name: string; code: string; is_active: boolean; weeklyWorkload?: number }[]> {
     const response = await this.get<any>(
-      `${this.basePath}/grade/${gradeUuid}/assigned-subjects`
+      `${this.basePath}/grade/${gradeUuid}/assigned-subjects`,
+      { params: { academicYearUuid } }
     );
-
-    console.log('📥 Assigned Subjects Response:', response);
 
     const extracted = extractApiData<{
       grade: { id: number; uuid: string; name: string };

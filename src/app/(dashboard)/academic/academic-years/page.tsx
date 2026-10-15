@@ -20,6 +20,7 @@ import {
   CalendarDays,
   Award,
   Sparkles,
+  CopyPlus,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button/Button';
 import { Input } from '@/shared/components/ui/Input/Input';
@@ -31,6 +32,7 @@ import { useLoading } from '@/shared/contexts/LoadingContext';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { academicYearService } from '@/features/academic/academic-years/services/academic-year.service';
 import { AcademicYearForm } from '@/features/academic/academic-years/components/AcademicYearForm';
+import { AcademicYearRolloverWizard } from '@/features/academic/academic-years/components/AcademicYearRolloverWizard';
 import type { AcademicYear, AcademicYearFilters } from '@/features/academic/academic-years/types/academic-year.types';
 import styles from './page.module.css';
 
@@ -69,6 +71,8 @@ export default function AcademicYearsPage() {
   const [filters, setFilters] = useState<AcademicYearFilters>({ page: 1, limit: 10 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState<AcademicYear | null>(null);
+  // Assistente "Preparar o ano letivo" (copiar plano, turmas e atribuições)
+  const [rolloverYear, setRolloverYear] = useState<AcademicYear | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -235,6 +239,13 @@ const loadAcademicYears = async () => {
                 </button>
                 <button
                   className={styles.iconButton}
+                  onClick={() => setRolloverYear(year)}
+                  title="Preparar ano (copiar do ano anterior)"
+                >
+                  <CopyPlus size={16} />
+                </button>
+                <button
+                  className={styles.iconButton}
                   onClick={() => handleEdit(year)}
                   title="Editar"
                 >
@@ -337,6 +348,13 @@ const loadAcademicYears = async () => {
                       ) : (
                         <Power size={16} className={styles.actionActive} />
                       )}
+                    </button>
+                    <button
+                      className={styles.actionButton}
+                      onClick={() => setRolloverYear(year)}
+                      title="Preparar ano (copiar do ano anterior)"
+                    >
+                      <CopyPlus size={16} />
                     </button>
                     <button
                       className={styles.actionButton}
@@ -530,9 +548,10 @@ const loadAcademicYears = async () => {
       >
         <AcademicYearForm
           year={selectedYear}
-          onSuccess={() => {
+          onSuccess={(created) => {
             setIsModalOpen(false);
             setSelectedYear(null);
+            if (created && academicYears.length > 0) setRolloverYear(created);
             showSuccess(
               selectedYear ? 'Ano atualizado' : 'Ano criado',
               selectedYear 
@@ -546,6 +565,21 @@ const loadAcademicYears = async () => {
             setSelectedYear(null);
           }}
         />
+      </Modal>
+
+      <Modal
+        isOpen={rolloverYear !== null}
+        onClose={() => setRolloverYear(null)}
+        title={rolloverYear ? `Preparar o ano letivo ${rolloverYear.name}` : ''}
+        size="lg"
+      >
+        {rolloverYear && (
+          <AcademicYearRolloverWizard
+            key={rolloverYear.uuid}
+            targetYear={rolloverYear}
+            onClose={() => setRolloverYear(null)}
+          />
+        )}
       </Modal>
     </div>
   );

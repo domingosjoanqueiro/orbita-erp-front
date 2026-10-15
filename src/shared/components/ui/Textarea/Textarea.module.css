@@ -1,3 +1,5 @@
+/* src/shared/components/ui/Textarea/Textarea.module.css */
+
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -12,6 +14,11 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
 }
 
 .textarea {
@@ -55,7 +62,115 @@
   width: 100%;
 }
 
+/* ✅ Ícones no Textarea */
+.textarea.hasLeftIcon {
+  padding-left: 2.5rem;
+}
+
+.textarea.hasRightIcon {
+  padding-right: 2.5rem;
+}
+
+.leftIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rightIcon {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ✅ Ajuste para quando o textarea tem ícone e está em foco */
+.textarea.hasLeftIcon:focus {
+  padding-left: 2.5rem;
+}
+
+.textarea.hasRightIcon:focus {
+  padding-right: 2.5rem;
+}
+
 .errorMessage {
   font-size: 0.75rem;
   color: var(--error);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .textarea {
+    font-size: 0.813rem;
+    padding: 0.4rem 0.625rem;
+    min-height: 60px;
+  }
+
+  .textarea.hasLeftIcon {
+    padding-left: 2rem;
+  }
+
+  .textarea.hasRightIcon {
+    padding-right: 2rem;
+  }
+
+  .leftIcon {
+    left: 0.625rem;
+    top: 0.625rem;
+  }
+
+  .leftIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .rightIcon {
+    right: 0.625rem;
+    top: 0.625rem;
+  }
+
+  .rightIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ============================================================
+   Dark Theme
+   ============================================================ */
+
+[data-theme="dark"] .textarea {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .textarea:hover {
+  border-color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="dark"] .leftIcon {
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .rightIcon {
+  color: var(--text-tertiary);
 }

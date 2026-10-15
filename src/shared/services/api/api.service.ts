@@ -7,6 +7,20 @@ export interface ApiServiceOptions {
 
 export type ID = string | number;
 
+/*
+ * Os filtros do frontend usam "isActive", mas a maioria das listagens da API
+ * lê o estado no parâmetro "status" (anos letivos lê "isActive").
+ * Envia-se ambos para que o filtro de estado funcione em todos os módulos.
+ */
+function normalizeListParams(
+  params?: Record<string, any>
+): Record<string, any> | undefined {
+  if (!params || params.isActive === undefined || params.status !== undefined) {
+    return params;
+  }
+  return { ...params, status: params.isActive };
+}
+
 export class ApiService {
 
   protected authType: 'platform' | 'company' = 'company';
@@ -41,7 +55,10 @@ export class ApiService {
     const response =
       await api.get(
         url,
-        options
+        {
+          ...options,
+          params: normalizeListParams(options?.params),
+        }
       );
 
     return response.data;

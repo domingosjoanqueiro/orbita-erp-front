@@ -14,13 +14,11 @@ import {
   Edit,
   Trash2,
   Users,
-  MoreVertical,
-  Sparkles,
   Lock,
   Unlock,
-  Eye,
-  EyeOff,
-  Copy,
+  LayoutGrid,
+  List,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button/Button';
 import { Input } from '@/shared/components/ui/Input/Input';
@@ -32,32 +30,12 @@ import { useLoading } from '@/shared/contexts/LoadingContext';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { RoleForm } from '@/features/identity/roles/components/RoleForm';
 import { roleService } from '@/features/identity/roles/services/role.service';
-import { permissionService } from '@/features/identity/permissions/services/permission.service';
-import { roleColors } from '@/features/identity/roles/types/role.types';
-import type { Role, RoleFilters, Permission } from '@/features/identity/roles/types/role.types';
+import { companyPermissionService } from '@/features/identity/permissions/services/permission.service';
+import type { Role, RoleFilters } from '@/features/identity/roles/types/role.types';
+import type { Permission } from '@/features/identity/permissions/types/permission.types';
 import styles from './page.module.css';
 
-const isActiveBoolean = (value: any): boolean => {
-  if (value === undefined || value === null) return false;
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return value === 1;
-  if (typeof value === 'string') {
-    const lower = value.toLowerCase().trim();
-    return lower === '1' || lower === 'true' || lower === 'yes' || lower === 'on';
-  }
-  return false;
-};
-
-const getStatusBadge = (isDefault: boolean) => {
-  return (
-    <Badge variant={isDefault ? 'info' : 'neutral'} size="sm">
-      <span className={styles.statusBadge}>
-        {isDefault ? <CheckCircle size={12} /> : <XCircle size={12} />}
-        {isDefault ? 'Padrão' : 'Personalizada'}
-      </span>
-    </Badge>
-  );
-};
+type ViewMode = 'list' | 'cards';
 
 const getSystemBadge = (isSystem: boolean) => {
   return (
@@ -65,6 +43,17 @@ const getSystemBadge = (isSystem: boolean) => {
       <span className={styles.systemBadge}>
         {isSystem ? <Lock size={10} /> : <Unlock size={10} />}
         {isSystem ? 'Sistema' : 'Custom'}
+      </span>
+    </Badge>
+  );
+};
+
+const getStatusBadge = (isActive: boolean) => {
+  return (
+    <Badge variant={isActive ? 'success' : 'error'} size="sm">
+      <span className={styles.statusBadge}>
+        {isActive ? <CheckCircle size={12} /> : <XCircle size={12} />}
+        {isActive ? 'Ativa' : 'Inativa'}
       </span>
     </Badge>
   );
@@ -85,20 +74,18 @@ export default function RolesPage() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     roleId?: string;
     roleName?: string;
   }>({ isOpen: false });
 
-  // ============================================================
   // Carregar Permissões
-  // ============================================================
-
   useEffect(() => {
     const loadPermissions = async () => {
       try {
-        const response = await permissionService.getAll({ limit: 100 });
+        const response = await companyPermissionService.getAll({ limit: 100 });
         setPermissions(response.data || []);
         console.log('📚 Permissões carregadas:', response.data?.length);
       } catch (error) {
@@ -109,10 +96,7 @@ export default function RolesPage() {
     loadPermissions();
   }, []);
 
-  // ============================================================
   // Carregar Roles
-  // ============================================================
-
   const loadRoles = async () => {
     try {
       startLoading();
@@ -121,9 +105,8 @@ export default function RolesPage() {
         search: searchTerm || undefined,
       });
       const dataArray = response?.data || [];
-      setRoles(dataArray.map((r: any) => ({ 
-        ...r, 
-        isActive: isActiveBoolean(r.isActive),
+      setRoles(dataArray.map((r: any) => ({
+        ...r,
         permissions: r.permissions || [],
         usersCount: r.usersCount || 0,
       })));
@@ -140,7 +123,7 @@ export default function RolesPage() {
 
   useEffect(() => {
     loadRoles();
-  }, [filters.page, filters.limit, filters.isDefault, filters.isSystem]);
+  }, [filters.page, filters.limit, filters.isSystem]);
 
   const handleSearch = () => {
     setFilters({ ...filters, page: 1 });
@@ -164,7 +147,7 @@ export default function RolesPage() {
     }
     setConfirmDialog({
       isOpen: true,
-      roleId: role.id,
+      roleId: role.uuid,
       roleName: role.name,
     });
   };
@@ -194,14 +177,197 @@ export default function RolesPage() {
     });
   };
 
-  // Filtrar roles localmente para busca
+  // Filtrar roles localmente
   const filteredRoles = roles.filter(role => {
     const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (role.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-    const matchesDefault = filters.isDefault === undefined || role.isDefault === filters.isDefault;
     const matchesSystem = filters.isSystem === undefined || role.isSystem === filters.isSystem;
-    return matchesSearch && matchesDefault && matchesSystem;
+    return matchesSearch && matchesSystem;
   });
+
+  // ✅ Renderização em Lista
+  const renderListView = () => {
+    if (filteredRoles.length === 0) return <EmptyState />;
+
+    return (
+      <div className={styles.listContainer}>
+        <div className={styles.listHeader}>
+          <div className={styles.listHeaderCell}>Role</div>
+          <div className={styles.listHeaderCell}>Descrição</div>
+          <div className={styles.listHeaderCell}>Permissões</div>
+          <div className={styles.listHeaderCell}>Tipo</div>
+          <div className={styles.listHeaderCell}>Usuários</div>
+          <div className={styles.listHeaderCell} style={{ textAlign: 'right' }}>Ações</div>
+        </div>
+        {filteredRoles.map((role) => (
+          <div key={role.id} className={styles.listItem}>
+            <div className={styles.listItemCell}>
+              <div className={styles.listItemName}>
+                <div
+                  className={styles.listItemColor}
+                  style={{ backgroundColor: '#8B5CF6' }}
+                />
+                <span>{role.name}</span>
+              </div>
+            </div>
+            <div className={styles.listItemCell}>
+              <span className={styles.listItemDescription}>
+                {role.description || '-'}
+              </span>
+            </div>
+            <div className={styles.listItemCell}>
+              <div className={styles.listItemPermissions}>
+                {(role.permissions || []).slice(0, 3).map((perm) => (
+                  <span key={perm.id} className={styles.listItemPermissionTag}>
+                    {perm.resource}.{perm.action}
+                  </span>
+                ))}
+                {(role.permissions || []).length > 3 && (
+                  <span className={styles.listItemPermissionMore}>
+                    +{(role.permissions || []).length - 3}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className={styles.listItemCell}>
+              {getSystemBadge(role.isSystem)}
+            </div>
+            <div className={styles.listItemCell}>
+              <span className={styles.listItemUsers}>
+                <Users size={14} />
+                {role.usersCount || 0}
+              </span>
+            </div>
+            <div className={styles.listItemCell} style={{ textAlign: 'right' }}>
+              <div className={styles.listItemActions}>
+                <button
+                  className={styles.listItemAction}
+                  onClick={() => handleEdit(role)}
+                  title="Editar"
+                >
+                  <Edit size={16} />
+                </button>
+                <button
+                  className={styles.listItemAction}
+                  onClick={() => handleDelete(role)}
+                  title="Excluir"
+                  disabled={role.isSystem}
+                >
+                  <Trash2 size={16} className={role.isSystem ? styles.actionDisabled : styles.actionDanger} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // ✅ Renderização em Cards
+  const renderCardsView = () => {
+    if (filteredRoles.length === 0) return <EmptyState />;
+
+    return (
+      <div className={styles.cardsGrid}>
+        {filteredRoles.map((role) => (
+          <div key={role.id} className={styles.roleCard}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardHeaderLeft}>
+                <div
+                  className={styles.roleColor}
+                  style={{ backgroundColor: '#8B5CF6' }}
+                />
+                <div>
+                  <h3 className={styles.roleName}>{role.name}</h3>
+                  {role.description && (
+                    <p className={styles.roleDescription}>{role.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className={styles.cardActions}>
+                {role.isSystem && (
+                  <span className={styles.systemBadge}>
+                    <Lock size={12} />
+                  </span>
+                )}
+                <button
+                  className={styles.iconButton}
+                  onClick={() => handleEdit(role)}
+                  title="Editar"
+                >
+                  <Edit size={16} />
+                </button>
+                <button
+                  className={styles.iconButton}
+                  onClick={() => handleDelete(role)}
+                  title="Excluir"
+                  disabled={role.isSystem}
+                >
+                  <Trash2 size={16} className={role.isSystem ? styles.actionDisabled : styles.actionDanger} />
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.cardBody}>
+              <div className={styles.permissionsPreview}>
+                <div className={styles.permissionsHeader}>
+                  <span className={styles.permissionsLabel}>
+                    <Shield size={14} />
+                    {(role.permissions || []).length} permissões
+                  </span>
+                </div>
+                <div className={styles.permissionsTags}>
+                  {(role.permissions || []).slice(0, 4).map((perm) => (
+                    <span key={perm.id} className={styles.permissionTag}>
+                      {perm.resource}.{perm.action}
+                    </span>
+                  ))}
+                  {(role.permissions || []).length > 4 && (
+                    <span className={styles.permissionMore}>
+                      +{(role.permissions || []).length - 4}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.cardFooter}>
+              <div className={styles.cardTags}>
+                {getSystemBadge(role.isSystem)}
+              </div>
+              <div className={styles.cardStats}>
+                <span className={styles.statItem}>
+                  <Users size={12} />
+                  {role.usersCount || 0}
+                </span>
+                <span className={styles.statItem}>
+                  <Clock size={12} />
+                  {formatDate(role.createdAt)}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const EmptyState = () => (
+    <div className={styles.emptyState}>
+      <div className={styles.emptyIconWrapper}>
+        <Shield size={48} className={styles.emptyIcon} />
+      </div>
+      <h3 className={styles.emptyTitle}>Nenhuma role encontrada</h3>
+      <p className={styles.emptySubtext}>
+        {searchTerm || filters.isSystem !== undefined
+          ? 'Tente ajustar seus filtros para encontrar o que procura'
+          : 'Comece criando uma nova role para o sistema'}
+      </p>
+      <Button icon={<Plus size={18} />} onClick={handleCreate} className={styles.emptyButton}>
+        Criar role
+      </Button>
+    </div>
+  );
 
   if (isLoading && roles.length === 0) {
     return (
@@ -277,9 +443,25 @@ export default function RolesPage() {
           </button>
         </div>
         <div className={styles.toolbarRight}>
+          <div className={styles.viewToggle}>
+            <button
+              className={`${styles.viewButton} ${viewMode === 'list' ? styles.active : ''}`}
+              onClick={() => setViewMode('list')}
+              title="Visualização em Lista"
+            >
+              <List size={16} />
+            </button>
+            <button
+              className={`${styles.viewButton} ${viewMode === 'cards' ? styles.active : ''}`}
+              onClick={() => setViewMode('cards')}
+              title="Visualização em Cards"
+            >
+              <LayoutGrid size={16} />
+            </button>
+          </div>
           <span className={styles.lastUpdate}>
             <Clock size={12} />
-            {filteredRoles.length} roles encontradas
+            {filteredRoles.length} roles
           </span>
         </div>
       </div>
@@ -312,133 +494,13 @@ export default function RolesPage() {
               </button>
             </div>
           </div>
-
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Status</label>
-            <div className={styles.filterOptions}>
-              <button
-                className={`${styles.filterChip} ${filters.isDefault === undefined ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, isDefault: undefined })}
-              >
-                Todos
-              </button>
-              <button
-                className={`${styles.filterChip} ${filters.isDefault === true ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, isDefault: true })}
-              >
-                Padrão
-              </button>
-              <button
-                className={`${styles.filterChip} ${filters.isDefault === false ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, isDefault: false })}
-              >
-                Personalizada
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* Cards Grid */}
-      <div className={styles.cardsGrid}>
-        {filteredRoles.map((role) => (
-          <div key={role.id} className={styles.roleCard}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardHeaderLeft}>
-                <div
-                  className={styles.roleColor}
-                  style={{ backgroundColor: role.color || '#8B5CF6' }}
-                />
-                <div>
-                  <h3 className={styles.roleName}>{role.name}</h3>
-                  {role.description && (
-                    <p className={styles.roleDescription}>{role.description}</p>
-                  )}
-                </div>
-              </div>
-              <div className={styles.cardActions}>
-                {role.isSystem && (
-                  <span className={styles.systemBadge}>
-                    <Lock size={12} />
-                  </span>
-                )}
-                <button
-                  className={styles.iconButton}
-                  onClick={() => handleEdit(role)}
-                  title="Editar"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  className={styles.iconButton}
-                  onClick={() => handleDelete(role)}
-                  title="Excluir"
-                  disabled={role.isSystem}
-                >
-                  <Trash2 size={16} className={role.isSystem ? styles.actionDisabled : styles.actionDanger} />
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.cardBody}>
-              <div className={styles.permissionsPreview}>
-                <div className={styles.permissionsHeader}>
-                  <span className={styles.permissionsLabel}>
-                    <Shield size={14} />
-                    {(role.permissions || []).length} permissões
-                  </span>
-                </div>
-                <div className={styles.permissionsTags}>
-                  {(role.permissions || []).slice(0, 4).map((perm) => (
-                    <span key={perm.id} className={styles.permissionTag}>
-                      {perm.resource}.{perm.action}
-                    </span>
-                  ))}
-                  {(role.permissions || []).length > 4 && (
-                    <span className={styles.permissionMore}>
-                      +{(role.permissions || []).length - 4}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.cardFooter}>
-              <div className={styles.cardTags}>
-                {getStatusBadge(role.isDefault)}
-                {getSystemBadge(role.isSystem)}
-              </div>
-              <div className={styles.cardStats}>
-                <span className={styles.statItem}>
-                  <Users size={12} />
-                  {role.usersCount || 0} usuários
-                </span>
-                <span className={styles.statItem}>
-                  <Clock size={12} />
-                  {formatDate(role.createdAt)}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Content */}
+      <div className={styles.content}>
+        {viewMode === 'list' ? renderListView() : renderCardsView()}
       </div>
-
-      {filteredRoles.length === 0 && (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIconWrapper}>
-            <Shield size={48} className={styles.emptyIcon} />
-          </div>
-          <h3 className={styles.emptyTitle}>Nenhuma role encontrada</h3>
-          <p className={styles.emptySubtext}>
-            {searchTerm || filters.isDefault !== undefined || filters.isSystem !== undefined
-              ? 'Tente ajustar seus filtros para encontrar o que procura'
-              : 'Comece criando uma nova role para o sistema'}
-          </p>
-          <Button icon={<Plus size={18} />} onClick={handleCreate}>
-            Criar role
-          </Button>
-        </div>
-      )}
 
       {/* Confirm Dialog */}
       <ConfirmDialog

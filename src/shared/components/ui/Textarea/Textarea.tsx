@@ -1,3 +1,5 @@
+// src/shared/components/ui/Textarea/Textarea.tsx
+
 'use client';
 
 import React, { forwardRef } from 'react';
@@ -9,28 +11,58 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   error?: FormError;
   fullWidth?: boolean;
   rows?: number;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, fullWidth, rows = 4, className = '', ...props }, ref) => {
+  ({ 
+    label, 
+    error, 
+    fullWidth, 
+    rows = 4, 
+    className = '', 
+    leftIcon,
+    rightIcon,
+    ...props 
+  }, ref) => {
     const errorMessage = getErrorMessage(error);
+
+    const wrapperClasses = [
+      styles.wrapper,
+      fullWidth && styles.fullWidth,
+    ].filter(Boolean).join(' ');
 
     const textareaClasses = [
       styles.textarea,
       errorMessage && styles.error,
       fullWidth && styles.fullWidth,
+      leftIcon && styles.hasLeftIcon,
+      rightIcon && styles.hasRightIcon,
       className,
     ].filter(Boolean).join(' ');
 
     return (
-      <div className={`${styles.wrapper} ${fullWidth ? styles.fullWidth : ''}`}>
+      <div className={wrapperClasses}>
         {label && <label className={styles.label}>{label}</label>}
-        <textarea
-          ref={ref}
-          className={textareaClasses}
-          rows={rows}
-          {...props}
-        />
+        <div className={styles.inputWrapper}>
+          {leftIcon && (
+            <span className={styles.leftIcon}>
+              {leftIcon}
+            </span>
+          )}
+          <textarea
+            ref={ref}
+            className={textareaClasses}
+            rows={rows}
+            {...props}
+          />
+          {rightIcon && (
+            <span className={styles.rightIcon}>
+              {rightIcon}
+            </span>
+          )}
+        </div>
         {errorMessage && <span className={styles.errorMessage}>{errorMessage}</span>}
       </div>
     );

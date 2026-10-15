@@ -1,0 +1,218 @@
+/* src/features/academic/assessment-rules/components/AssessmentRuleForm.module.css */
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    height: 100%;
+    max-height: 100%;
+    padding: var(--spacing-sm) 0;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 2px;
+}
+
+.content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 2px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.field:last-child {
+    grid-column: 1 / -1;
+}
+
+.fieldHint {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin: 0;
+}
+
+/* Toggle */
+.toggleLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.toggleLabel input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: #8B5CF6;
+    cursor: pointer;
+}
+
+.toggleHelp {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin: 0;
+    padding-left: 2rem;
+}
+
+/* Weight Summary */
+.weightSummary {
+    grid-column: 1 / -1;
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.weightSummaryHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.weightSummaryHeader svg {
+    color: #8B5CF6;
+}
+
+.weightSummaryGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.weightSummaryItem {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.weightSummaryLabel {
+    font-size: 0.625rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+
+.weightSummaryValue {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.weightSummaryWarning {
+    font-size: 0.813rem;
+    color: var(--warning);
+    margin: 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.weightSummaryHint {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin: 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    background: var(--bg-primary);
+}
+
+.actionsLeft {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.actionsRight {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+
+    .weightSummaryGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .actionsLeft {
+        width: 100%;
+    }
+
+    .actionsLeft button {
+        width: 100%;
+    }
+
+    .actionsRight {
+        width: 100%;
+    }
+
+    .actionsRight button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .weightSummaryGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dark Theme */
+[data-theme="dark"] .weightSummary {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .weightSummaryWarning {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="dark"] .weightSummaryHint {
+    background: var(--bg-secondary);
+}

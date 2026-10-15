@@ -98,7 +98,6 @@ export default function ChangePasswordPage() {
       setError(null);
       await changePassword(data.currentPassword, data.newPassword, data.confirmPassword);
 
-      console.log("a respostsa")
     } catch (err: any) {
       const message = err.response?.data?.message || 'Erro ao alterar senha. Tente novamente.';
       setError(message);

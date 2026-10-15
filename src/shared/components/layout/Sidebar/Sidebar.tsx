@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog/ConfirmDialog';
+import { useNotifications } from '@/features/notifications/context/NotificationsContext';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -108,6 +110,10 @@ interface MenuItem {
   roles?: string[];
   platformOnly?: boolean;
   companyOnly?: boolean;
+  // Só para utilizadores associados a um professor (portal do professor)
+  teacherOnly?: boolean;
+  // Escondido no portal do professor (módulos sem backend ou de gestão da escola)
+  hideForTeacher?: boolean;
 }
 
 interface MenuGroup {
@@ -120,56 +126,59 @@ interface MenuGroup {
 // Menu Principal
 const mainMenuItems: MenuItem[] = [
   { icon: <LayoutDashboard size={18} />, label: 'Dashboard', href: '/dashboard', companyOnly: true },
+  { icon: <School size={18} />, label: 'Minhas Turmas', href: '/academic/my-classes', companyOnly: true, teacherOnly: true },
   { icon: <House size={18} />, label: 'Dashboard', href: '/super-admin', badge: 'Admin', platformOnly: true },
-  { icon: <Calendar size={18} />, label: 'Calendário', href: '/calendar' },
-  { icon: <Bell size={18} />, label: 'Notificações', href: '/notifications', badge: '3' },
+  { icon: <Calendar size={18} />, label: 'Calendário', href: '/calendar', hideForTeacher: true },
+  { icon: <Bell size={18} />, label: 'Notificações', href: '/notifications', companyOnly: true },
 ];
 
 // Acadêmico - Configuração
 // Acadêmico - Configuração
 const academicConfigItems: MenuItem[] = [
-  { icon: <CalendarDays size={18} />, label: 'Anos Letivos', href: '/academic/academic-years', companyOnly: true },
-  { icon: <Layers size={18} />, label: 'Níveis e Programas', href: '/academic/academic-structure', companyOnly: true },
-  { icon: <Settings size={18} />, label: 'Config. Académica', href: '/academic/program-settings', companyOnly: true },
-  { icon: <GraduationCap size={18} />, label: 'Classes', href: '/academic/grades', companyOnly: true },
-  { icon: <School size={18} />, label: 'Turmas', href: '/academic/classes', companyOnly: true },
-  { icon: <BookMarked size={18} />, label: 'Disciplinas', href: '/academic/subjects', companyOnly: true },
-  { icon: <BookOpen size={18} />, label: 'Plano Currícular', href: '/academic/grade-subjects', companyOnly: true },
+  { icon: <CalendarDays size={18} />, label: 'Anos Letivos', href: '/academic/academic-years', companyOnly: true, permissions: ['academic-years.read'], hideForTeacher: true },
+  { icon: <Layers size={18} />, label: 'Níveis e Programas', href: '/academic/academic-structure', companyOnly: true, permissions: ['school-levels.read', 'programs.read'], hideForTeacher: true },
+  { icon: <Settings size={18} />, label: 'Config. Académica', href: '/academic/program-settings', companyOnly: true, permissions: ['programAcademicSettings.read'], hideForTeacher: true },
+  { icon: <GraduationCap size={18} />, label: 'Classes', href: '/academic/grades', companyOnly: true, permissions: ['grades.read'], hideForTeacher: true },
+  { icon: <School size={18} />, label: 'Turmas', href: '/academic/classes', companyOnly: true, permissions: ['classes.read'], hideForTeacher: true },
+  { icon: <BookMarked size={18} />, label: 'Disciplinas', href: '/academic/subjects', companyOnly: true, permissions: ['subjects.read'], hideForTeacher: true },
+  { icon: <BookOpen size={18} />, label: 'Plano Currícular', href: '/academic/grade-subjects', companyOnly: true, permissions: ['gradeSubjects.read'], hideForTeacher: true },
+  { icon: <BarChart3 size={18} />, label: 'Regras de Avaliação', href: '/academic/assessment-rules', companyOnly: true, permissions: ['assessmentRules.read'], hideForTeacher: true },
+
 ];
 
 // Acadêmico - Gestão
 const academicManagementItems: MenuItem[] = [
-  { icon: <Users size={18} />, label: 'Alunos', href: '/students', companyOnly: true },
-  { icon: <UserCheck size={18} />, label: 'Professores', href: '/teachers', companyOnly: true },
-  { icon: <ClipboardList size={18} />, label: 'Matrículas', href: '/enrollments', companyOnly: true },
-  { icon: <Briefcase size={18} />, label: 'Atribuições', href: '/teacher-assignments', companyOnly: true },
+  { icon: <Users size={18} />, label: 'Alunos', href: '/academic/students', companyOnly: true, permissions: ['students.read'] },
+  { icon: <UserCheck size={18} />, label: 'Professores', href: '/academic/teachers', companyOnly: true, permissions: ['teachers.read'], hideForTeacher: true },
+  { icon: <ClipboardList size={18} />, label: 'Matrículas', href: '/academic/enrollments', companyOnly: true, permissions: ['enrollments.read'] },
+  { icon: <Briefcase size={18} />, label: 'Atribuições', href: '/academic/teacher-assignments', companyOnly: true, permissions: ['teacherAssignments.read'] },
 ];
 
 // Acadêmico - Avaliação
 const academicAssessmentItems: MenuItem[] = [
-  { icon: <CalendarCheck size={18} />, label: 'Presenças', href: '/attendance', companyOnly: true },
-  { icon: <BarChart3 size={18} />, label: 'Avaliações', href: '/assessments', companyOnly: true },
-  { icon: <FileText size={18} />, label: 'Pautas e Boletins', href: '/academic-reports', companyOnly: true },
-  { icon: <Archive size={18} />, label: 'Histórico Escolar', href: '/transcripts', companyOnly: true },
+    { icon: <BarChart3 size={18} />, label: 'Notas de Alunos', href: '/academic/assessments', companyOnly: true, permissions: ['assessmentScores.read', 'assessmentSubmissions.validate', 'assessmentSubmissions.publish'] },
+  { icon: <CalendarCheck size={18} />, label: 'Presenças', href: '/attendance', companyOnly: true, permissions: ['attendance.read'] },
+  { icon: <FileText size={18} />, label: 'Pautas e Boletins', href: '/academic-reports', companyOnly: true, permissions: ['gradebooks.read', 'classRankings.read', 'reportCards.read'] },
+  { icon: <Archive size={18} />, label: 'Histórico Escolar', href: '/transcripts', companyOnly: true, permissions: ['academicTranscripts.read'] },
 ];
 
 // Financeiro
 const financialItems: MenuItem[] = [
-  { icon: <Wallet size={18} />, label: 'Financeiro', href: '/financial', companyOnly: true },
-  { icon: <DollarSign size={18} />, label: 'Contas a Receber', href: '/receivables', companyOnly: true },
-  { icon: <CreditCard size={18} />, label: 'Contas a Pagar', href: '/payables', companyOnly: true },
-  { icon: <Landmark size={18} />, label: 'Bancos', href: '/banks', companyOnly: true },
-  { icon: <Coins size={18} />, label: 'Categorias', href: '/categories', companyOnly: true },
-  { icon: <TrendingUp size={18} />, label: 'Relatórios', href: '/financial-reports', companyOnly: true },
+  { icon: <Wallet size={18} />, label: 'Financeiro', href: '/financial', companyOnly: true, hideForTeacher: true },
+  { icon: <DollarSign size={18} />, label: 'Contas a Receber', href: '/receivables', companyOnly: true, hideForTeacher: true },
+  { icon: <CreditCard size={18} />, label: 'Contas a Pagar', href: '/payables', companyOnly: true, hideForTeacher: true },
+  { icon: <Landmark size={18} />, label: 'Bancos', href: '/banks', companyOnly: true, hideForTeacher: true },
+  { icon: <Coins size={18} />, label: 'Categorias', href: '/categories', companyOnly: true, hideForTeacher: true },
+  { icon: <TrendingUp size={18} />, label: 'Relatórios', href: '/financial-reports', companyOnly: true, hideForTeacher: true },
 ];
 
 // RH
 const hrItems: MenuItem[] = [
-  { icon: <UserPlus size={18} />, label: 'Funcionários', href: '/employees', companyOnly: true },
-  { icon: <Clock size={18} />, label: 'Ponto', href: '/attendance-hr', companyOnly: true },
-  { icon: <CalendarDays size={18} />, label: 'Férias', href: '/leaves', companyOnly: true },
-  { icon: <Award size={18} />, label: 'Avaliações', href: '/evaluations', companyOnly: true },
-  { icon: <FileText size={18} />, label: 'Contratos', href: '/contracts', companyOnly: true },
+  { icon: <UserPlus size={18} />, label: 'Funcionários', href: '/employees', companyOnly: true, hideForTeacher: true },
+  { icon: <Clock size={18} />, label: 'Ponto', href: '/attendance-hr', companyOnly: true, hideForTeacher: true },
+  { icon: <CalendarDays size={18} />, label: 'Férias', href: '/leaves', companyOnly: true, hideForTeacher: true },
+  { icon: <Award size={18} />, label: 'Avaliações', href: '/evaluations', companyOnly: true, hideForTeacher: true },
+  { icon: <FileText size={18} />, label: 'Contratos', href: '/contracts', companyOnly: true, hideForTeacher: true },
 ];
 
 // Plataforma
@@ -191,10 +200,10 @@ const adminItems: MenuItem[] = [
 ];
 
 const settingsItems: MenuItem[] = [
-  { icon: <Building2 size={18} />, label: 'Informações da Empresa', href: '/company/info', companyOnly: true },
-  { icon: <UserCircle size={18} />, label: 'Usuários', href: '/users', companyOnly: true },
-  { icon: <Shield size={18} />, label: 'Roles', href: '/roles', companyOnly: true },
-  { icon: <Key size={18} />, label: 'Permissões', href: '/permissions', companyOnly: true },
+  { icon: <Building2 size={18} />, label: 'Informações da Empresa', href: '/company/info', companyOnly: true, hideForTeacher: true },
+  { icon: <UserCircle size={18} />, label: 'Usuários', href: '/users', companyOnly: true, permissions: ['users.read'] },
+  { icon: <Shield size={18} />, label: 'Roles', href: '/roles', companyOnly: true, permissions: ['roles.read'] },
+  // { icon: <Key size={18} />, label: 'Permissões', href: '/permissions', companyOnly: true },
 ];
 
 
@@ -209,7 +218,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user: companyUser, logout: companyLogout, isAuthenticated: isCompanyAuth } = useAuth();
   const { user: platformUser, logout: platformLogout, isAuthenticated: isPlatformAuth } = usePlatformAuth();
   const { showSuccess } = useToast();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['academic-config', 'academic-management', 'platform']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['academic-config', 'academic-management', 'academic-assessment', 'platform']);
+  // Confirmação antes de terminar a sessão
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const notifications = useNotifications();
 
   const isPlatform = isPlatformAuth || !!platformUser;
   const isCompany = isCompanyAuth || !!companyUser;
@@ -229,6 +241,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const userPermissions = isPlatform
     ? platformUser?.roles?.flatMap(r => r.permissions?.map(p => p.code) || []) || []
     : companyUser?.roles?.flatMap(r => r.permissions?.map(p => p.code) || []) || [];
+
+  const isTeacher = !isPlatform && !!companyUser?.teacher;
+
+  const isItemVisible = (item: MenuItem): boolean => {
+    if (item.platformOnly && !isPlatform) return false;
+    if (item.companyOnly && isPlatform) return false;
+    if (item.teacherOnly && !isTeacher) return false;
+    if (item.hideForTeacher && isTeacher) return false;
+    if (!isPlatform && item.roles && item.roles.length > 0) {
+      if (!item.roles.some(role => userRoles.includes(role))) return false;
+    }
+    if (!isPlatform && item.permissions && item.permissions.length > 0) {
+      if (!item.permissions.some(code => userPermissions.includes(code))) return false;
+    }
+    return true;
+  };
 
   const handleLinkClick = () => { if (onMobileClose) onMobileClose(); };
   const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
@@ -255,12 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const renderMenuItem = (item: MenuItem) => {
-    if (item.platformOnly && !isPlatform) return null;
-    if (item.companyOnly && isPlatform) return null;
-    if (!isPlatform && item.roles && item.roles.length > 0) {
-      const hasRole = item.roles.some(role => userRoles.includes(role));
-      if (!hasRole) return null;
-    }
+    if (!isItemVisible(item)) return null;
 
     const active = isActive(item.href);
     return (
@@ -272,7 +295,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {!collapsed && (
           <>
             <span className={styles.label}>{item.label}</span>
-            {item.badge && <span className={styles.badge}>{item.badge}</span>}
+            {item.href === '/notifications'
+              ? (notifications?.unreadCount ?? 0) > 0 && (
+                <span className={styles.badge}>{notifications!.unreadCount > 99 ? '99+' : notifications!.unreadCount}</span>
+              )
+              : item.badge && <span className={styles.badge}>{item.badge}</span>}
           </>
         )}
       </Link>
@@ -280,15 +307,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const renderGroup = (group: MenuGroup) => {
-    const visibleItems = group.items.filter(item => {
-      if (item.platformOnly && !isPlatform) return false;
-      if (item.companyOnly && isPlatform) return false;
-      if (!isPlatform && item.roles && item.roles.length > 0) {
-        const hasRole = item.roles.some(role => userRoles.includes(role));
-        if (!hasRole) return false;
-      }
-      return true;
-    });
+    const visibleItems = group.items.filter(isItemVisible);
 
     if (visibleItems.length === 0) return null;
     const isExpanded = expandedGroups.includes(group.id);
@@ -368,15 +387,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {renderGroup({ id: 'academic-management', label: 'Gestão', icon: <Users size={16} />, items: academicManagementItems })}
               {renderGroup({ id: 'academic-assessment', label: 'Avaliação', icon: <BarChart3 size={16} />, items: academicAssessmentItems })}
 
-              {!collapsed && <div className={styles.sectionLabel}>Financeiro</div>}
-              {renderGroup({ id: 'financial', label: 'Financeiro', icon: <Wallet size={16} />, items: financialItems })}
+              {!isTeacher && (
+                <>
+                  {!collapsed && <div className={styles.sectionLabel}>Financeiro</div>}
+                  {renderGroup({ id: 'financial', label: 'Financeiro', icon: <Wallet size={16} />, items: financialItems })}
 
-              {!collapsed && <div className={styles.sectionLabel}>Recursos Humanos</div>}
-              {renderGroup({ id: 'hr', label: 'RH', icon: <UserPlus size={16} />, items: hrItems })}
+                  {!collapsed && <div className={styles.sectionLabel}>Recursos Humanos</div>}
+                  {renderGroup({ id: 'hr', label: 'RH', icon: <UserPlus size={16} />, items: hrItems })}
+                </>
+              )}
             </>
           )}
 
-          {!isPlatform && (
+          {!isPlatform && settingsItems.some(isItemVisible) && (
             <>
               {!collapsed && <div className={styles.sectionLabel}>Configurações</div>}
               {renderGroup({
@@ -410,7 +433,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className={styles.userRole}>{userRole}{isRoot && ' 👑'}</span>
               </div>
             )} */}
-            {!collapsed && <button className={styles.logoutBtn} onClick={handleLogout}><LogOut size={16} />
+            {!collapsed && <button className={styles.logoutBtn} onClick={() => setConfirmLogout(true)}><LogOut size={16} />
 
               <span className={styles.logoutText}> Sair</span>
 
@@ -418,6 +441,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       </aside>
+      <ConfirmDialog
+        isOpen={confirmLogout}
+        onClose={() => setConfirmLogout(false)}
+        onConfirm={() => {
+          setConfirmLogout(false);
+          handleLogout();
+        }}
+        title="Terminar sessão"
+        message="Tem a certeza de que pretende sair do sistema?"
+        type="warning"
+        confirmText="Sair"
+        cancelText="Cancelar"
+      />
     </>
   );
 };

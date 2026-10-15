@@ -15,7 +15,7 @@ import styles from './AcademicYearForm.module.css';
 
 interface AcademicYearFormProps {
   year?: AcademicYear | null;
-  onSuccess: () => void;
+  onSuccess: (created?: AcademicYear) => void;
   onCancel: () => void;
 }
 
@@ -135,7 +135,7 @@ export const AcademicYearForm: React.FC<AcademicYearFormProps> = ({
         showSuccess('Ano criado', `${response.name} foi criado com sucesso`);
       }
 
-      onSuccess();
+      onSuccess(isEditing ? undefined : response);
     } catch (error: any) {
       console.error('Erro ao salvar ano:', error);
       let errorMessage = 'Erro ao salvar ano. Tente novamente.';

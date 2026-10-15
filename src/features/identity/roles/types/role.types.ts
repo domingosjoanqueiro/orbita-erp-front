@@ -1,74 +1,74 @@
-export interface Permission {
-  id: string;
-  name: string;
-  description?: string;
-  resource: string;
-  action: 'create' | 'read' | 'update' | 'delete' ;
-  module: string;
-}
+// src/features/identity/roles/types/role.types.ts
+
+import type { Permission } from '../../permissions/types/permission.types';
 
 export interface Role {
-  id: string;
+
+  id: number;
+
+  uuid: string;
+
   name: string;
+
   description?: string;
+
   permissions: Permission[];
-  isDefault: boolean;
+
+  isAdmin: boolean;
+
   isSystem: boolean;
-  usersCount: number;
-  color?: string;
+
+  isActive: boolean;
+
+  usersCount?: number;
+
   createdAt: string;
+
   updatedAt: string;
+
+  deletedAt?: string | null;
+
 }
 
-export interface CreateRoleDTO {
+
+export interface CreateRoleRequest {
+
   name: string;
+
   description?: string;
+
+  isAdmin?: boolean;
+
   permissionIds: string[];
-  isDefault?: boolean;
-  color?: string;
+
 }
 
-export interface UpdateRoleDTO {
+
+export interface UpdateRoleRequest {
+
   name?: string;
+
   description?: string;
+
+  isAdmin?: boolean;
+
   permissionIds?: string[];
-  isDefault?: boolean;
-  color?: string;
+
 }
+
 
 export interface RoleFilters {
+
   search?: string;
-  isDefault?: boolean;
+
+  isAdmin?: boolean;
+
   isSystem?: boolean;
+
+  isActive?: boolean;
+
   page?: number;
+
   limit?: number;
+
 }
-
-// Módulos disponíveis
-export const modules = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
-  { id: 'users', label: 'Usuários', icon: 'Users' },
-  { id: 'roles', label: 'Roles', icon: 'Shield' },
-  { id: 'companies', label: 'Empresas', icon: 'Building2' },
-  { id: 'students', label: 'Alunos', icon: 'GraduationCap' },
-  { id: 'teachers', label: 'Professores', icon: 'UserCheck' },
-  { id: 'enrollments', label: 'Matrículas', icon: 'BookOpen' },
-  { id: 'grades', label: 'Notas', icon: 'TrendingUp' },
-  { id: 'attendance', label: 'Presenças', icon: 'CalendarCheck' },
-  { id: 'reports', label: 'Relatórios', icon: 'FileText' },
-  { id: 'settings', label: 'Configurações', icon: 'Settings' },
-];
-
-// Ações disponíveis
-export const actions = [
-  { value: 'create', label: 'Criar', color: '#10B981' },
-  { value: 'read', label: 'Ler', color: '#2563EB' },
-  { value: 'update', label: 'Atualizar', color: '#F59E0B' },
-  { value: 'delete', label: 'Excluir', color: '#EF4444' },
-];
-
-// Cores para roles
-export const roleColors = [
-  '#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-  '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16',
-];

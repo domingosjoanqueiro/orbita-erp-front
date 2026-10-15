@@ -1,125 +1,377 @@
-export interface Student {
-  id: number;
-  uuid: string;
-  companyId: number;
-  studentNumber: string;
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  fullName?: string;
-  gender: 'MALE' | 'FEMALE';
-  birthDate: string;
-  birthPlace?: string;
-  nationality: string;
-  province?: string;
-  district?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  documentType?: string;
-  documentNumber?: string;
-  fatherFullName?: string;
-  motherFullName?: string;
-  guardianName?: string;
-  guardianPhone?: string;
-  guardianRelationship?: string;
-  photo?: string;
-  admissionDate: string;
-  studentStatus: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'TRANSFERRED';
-  isActive: boolean;
-  userId?: number;
-  user?: {
-    id: number;
+// src/features/academic/students/types/student.types.ts
+
+export type Gender =
+    | 'MALE'
+    | 'FEMALE';
+
+export type DocumentType =
+    | 'BI'
+    | 'PASSPORT'
+    | 'DIRE'
+    | 'NUIT';
+
+export type StudentStatus =
+    | 'ACTIVE'
+    | 'INACTIVE'
+    | 'GRADUATED'
+    | 'TRANSFERRED'
+    | 'SUSPENDED';
+
+
+/*
+|--------------------------------------------------------------------------
+| Current Enrollment
+|--------------------------------------------------------------------------
+*/
+
+export interface StudentCurrentEnrollment {
+
     uuid: string;
-    username: string;
-    email: string;
-    isActive: boolean;
-  };
-  enrollments?: Enrollment[];
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
-}
 
-export interface Enrollment {
-  id: number;
-  uuid: string;
-  studentId: number;
-  classId: number;
-  enrollmentNumber: string;
-  enrollmentDate: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
-  remarks?: string;
-  isActive: boolean;
-  class?: {
-    id: number;
-    name: string;
-    grade?: {
-      id: number;
-      name: string;
+    enrollmentNumber: string;
+
+    enrollmentDate: string;
+
+    status: string;
+
+    grade: {
+
+        uuid: string;
+
+        name: string;
+
+        code: string | null;
+
     };
-  };
-  createdAt: string;
-  updatedAt: string;
+
+    class: {
+
+        uuid: string;
+
+        name: string;
+
+        code: string | null;
+
+    };
+
 }
 
-export interface CreateStudentDTO {
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  gender: 'MALE' | 'FEMALE';
-  birthDate: string;
-  birthPlace?: string;
-  nationality: string;
-  province?: string;
-  district?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  documentType?: string;
-  documentNumber?: string;
-  fatherFullName?: string;
-  motherFullName?: string;
-  guardianName?: string;
-  guardianPhone?: string;
-  guardianRelationship?: string;
-  admissionDate: string;
-  studentStatus?: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'TRANSFERRED';
-  roleId?: number;
-  companyId?: number;
+
+/*
+|--------------------------------------------------------------------------
+| Student
+|--------------------------------------------------------------------------
+*/
+
+export interface Student {
+
+    id: number;
+
+    uuid: string;
+
+    companyId: number;
+
+    userId?: number | null;
+
+    studentNumber: string;
+
+    firstName: string;
+
+    middleName?: string | null;
+
+    lastName: string;
+
+    fullName: string;
+
+    gender: Gender;
+
+    birthDate: string;
+
+    birthPlace?: string | null;
+
+    nationality?: string | null;
+
+    province?: string | null;
+
+    district?: string | null;
+
+    address?: string | null;
+
+    phone?: string | null;
+
+    email?: string | null;
+
+    documentType?: DocumentType | null;
+
+    documentNumber?: string | null;
+
+    fatherFullName?: string | null;
+
+    motherFullName?: string | null;
+
+    guardianName?: string | null;
+
+    guardianPhone?: string | null;
+
+    guardianRelationship?: string | null;
+
+    photo?: string | null;
+
+    admissionDate?: string | null;
+
+    studentStatus?: StudentStatus | null;
+
+    remarks?: string | null;
+
+    isActive: boolean;
+
+    createdAt: string;
+
+    updatedAt: string;
+
+    deletedAt?: string | null;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Current Academic Allocation
+    |--------------------------------------------------------------------------
+    */
+
+    currentEnrollment:
+        StudentCurrentEnrollment | null;
+
 }
 
-export interface UpdateStudentDTO {
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
-  gender?: 'MALE' | 'FEMALE';
-  birthDate?: string;
-  birthPlace?: string;
-  nationality?: string;
-  province?: string;
-  district?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  documentType?: string;
-  documentNumber?: string;
-  fatherFullName?: string;
-  motherFullName?: string;
-  guardianName?: string;
-  guardianPhone?: string;
-  guardianRelationship?: string;
-  admissionDate?: string;
-  studentStatus?: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'TRANSFERRED';
-  isActive?: boolean;
+
+/*
+|--------------------------------------------------------------------------
+| Create Student
+|--------------------------------------------------------------------------
+*/
+
+export interface CreateStudentRequest {
+
+    firstName: string;
+
+    middleName?: string | null;
+
+    lastName: string;
+
+    gender: Gender;
+
+    birthDate: string;
+
+    birthPlace?: string | null;
+
+    nationality?: string | null;
+
+    province?: string | null;
+
+    district?: string | null;
+
+    address?: string | null;
+
+    phone?: string | null;
+
+    email?: string | null;
+
+    documentType?: DocumentType | null;
+
+    documentNumber?: string | null;
+
+    fatherFullName?: string | null;
+
+    motherFullName?: string | null;
+
+    guardianName?: string | null;
+
+    guardianPhone?: string | null;
+
+    guardianRelationship?: string | null;
+
+    photo?: string | null;
+
+    admissionDate?: string | null;
+
+    studentStatus?: StudentStatus | null;
+
+    remarks?: string | null;
+
+    isActive?: boolean;
+
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| Update Student
+|--------------------------------------------------------------------------
+*/
+
+export interface UpdateStudentRequest {
+
+    firstName?: string;
+
+    middleName?: string | null;
+
+    lastName?: string;
+
+    gender?: Gender;
+
+    birthDate?: string;
+
+    birthPlace?: string | null;
+
+    nationality?: string | null;
+
+    province?: string | null;
+
+    district?: string | null;
+
+    address?: string | null;
+
+    phone?: string | null;
+
+    email?: string | null;
+
+    documentType?: DocumentType | null;
+
+    documentNumber?: string | null;
+
+    fatherFullName?: string | null;
+
+    motherFullName?: string | null;
+
+    guardianName?: string | null;
+
+    guardianPhone?: string | null;
+
+    guardianRelationship?: string | null;
+
+    photo?: string | null;
+
+    admissionDate?: string | null;
+
+    studentStatus?: StudentStatus | null;
+
+    remarks?: string | null;
+
+    isActive?: boolean;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Student Filters
+|--------------------------------------------------------------------------
+*/
 
 export interface StudentFilters {
-  search?: string;
-  gender?: 'MALE' | 'FEMALE';
-  studentStatus?: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'TRANSFERRED';
-  classId?: number;
-  isActive?: boolean;
-  page?: number;
-  limit?: number;
+
+    search?: string;
+
+    gender?: Gender;
+
+    classUuid?: string;
+
+    gradeUuid?: string;
+
+    studentStatus?: StudentStatus;
+
+    isActive?: boolean;
+
+    page?: number;
+
+    limit?: number;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Student With User
+|--------------------------------------------------------------------------
+*/
+
+export interface StudentWithUser
+    extends Student {
+
+    user?: {
+
+        id: number;
+
+        uuid: string;
+
+        email: string;
+
+        username: string;
+
+        isActive: boolean;
+        createdAt: string;
+
+    };
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Student Credentials
+|--------------------------------------------------------------------------
+*/
+
+export interface StudentCredentials {
+
+    username: string;
+
+    temporaryPassword: string;
+
+}
+
+
+export interface StudentResponseWithCredentials
+    extends Student {
+
+    credentials?: StudentCredentials;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Grade
+|--------------------------------------------------------------------------
+*/
+
+export interface Grade {
+
+    uuid: string;
+
+    name: string;
+
+    code: string;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Class
+|--------------------------------------------------------------------------
+*/
+
+export interface Class {
+
+    uuid: string;
+
+    name: string;
+
+    code: string;
+
+    gradeUuid: string;
+
+    gradeName: string;
+
 }
