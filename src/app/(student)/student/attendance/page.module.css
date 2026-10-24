@@ -1,0 +1,115 @@
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+}
+
+.summaryTop {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.summaryText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.summaryText strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.counters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 4px;
+  border-radius: 14px;
+}
+
+.counter strong {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.counter span {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.subjects {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.subjectRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subjectLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.subjectName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subjectMeta {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  color: var(--sp-text-2);
+}
+
+.subjectMeta strong {
+  color: var(--sp-text);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dayLabel {
+  padding: 0 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sp-text-3);
+}
+
+.dayLabel::first-letter {
+  text-transform: uppercase;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

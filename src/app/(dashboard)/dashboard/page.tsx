@@ -1,5 +1,9 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePermission } from '@/shared/hooks/usePermission';
+
 import React, { useEffect, useState } from 'react';
 import { 
   Users, 
@@ -12,9 +16,10 @@ import {
   BarChart3,
   SquareActivity,
   Zap,
-  Award,
   Heart,
-  ChevronRight,
+  Wallet,
+  CalendarClock,
+  FileBarChart,
 } from 'lucide-react';
 import { StatCard } from '@/shared/components/ui/StatCard/StatCard';
 import { SkeletonCard } from '@/shared/components/ui/Skeleton/SkeletonCard';
@@ -27,15 +32,19 @@ import { companyDashboardService } from '@/features/dashboard/services/dashboard
 import type { Activity } from '@/shared/components/dashboard/RecentActivities/RecentActivities';
 import type { Event } from '@/shared/components/dashboard/UpcomingEvents/UpcomingEvents';
 import type { CompanyDashboardStats } from '@/features/dashboard/types/dashboard.types';
+import { DashboardCharts } from '@/features/dashboard/components/DashboardCharts';
 import { TeacherDashboard } from '@/features/academic/teacher-portal/components/TeacherDashboard';
 import styles from './page.module.css';
 
-// Quick Actions
+// Ações rápidas: cada uma abre a página (ou o formulário) e só aparece com a permissão
 const quickActions = [
-  { label: 'Novo Aluno', icon: <Users size={16} />, color: '#2563EB' },
-  { label: 'Nova Matrícula', icon: <BookOpen size={16} />, color: '#10B981' },
-  { label: 'Lançar Notas', icon: <BarChart3 size={16} />, color: '#F59E0B' },
-  { label: 'Relatórios', icon: <SquareActivity size={16} />, color: '#8B5CF6' },
+  { label: 'Novo Aluno', href: '/academic/students?new=1', permissions: ['students.create'], icon: <Users size={16} />, color: '#2563EB' },
+  { label: 'Nova Matrícula', href: '/academic/enrollments?new=1', permissions: ['enrollments.create'], icon: <BookOpen size={16} />, color: '#10B981' },
+  { label: 'Lançar Notas', href: '/academic/assessments', permissions: ['assessmentScores.read', 'assessmentSubmissions.validate', 'assessmentSubmissions.publish'], icon: <BarChart3 size={16} />, color: '#F59E0B' },
+  { label: 'Receber Pagamento', href: '/finance/cashier', permissions: ['finance.payments'], icon: <Wallet size={16} />, color: '#0891B2' },
+  { label: 'Horários', href: '/academic/schedules', permissions: ['schedules.read'], icon: <CalendarClock size={16} />, color: '#DB2777' },
+  { label: 'Relatórios', href: '/reports', permissions: ['students.read', 'attendance.read', 'gradebooks.read', 'finance.read', 'hr.read'], icon: <FileBarChart size={16} />, color: '#0F766E' },
+  { label: 'Pautas e Boletins', href: '/academic-reports', permissions: ['gradebooks.read', 'classRankings.read', 'reportCards.read'], icon: <SquareActivity size={16} />, color: '#8B5CF6' },
 ];
 
 function CompanyDashboard() {
@@ -48,6 +57,8 @@ function CompanyDashboard() {
   const [stats, setStats] = useState<CompanyDashboardStats | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const router = useRouter();
+  const { hasAnyPermission } = usePermission();
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
 const loadDashboardData = async () => {
@@ -241,72 +252,6 @@ const loadDashboardData = async () => {
         </div>
       </div>
 
-      {/* Achievements / Progress Section */}
-      <div className={styles.achievements}>
-        <div className={styles.achievementsHeader}>
-          <span className={styles.achievementsTitle}>
-            <Award size={16} />
-            Progresso
-          </span>
-          <button className={styles.achievementsView}>
-            Ver detalhes <ChevronRight size={14} />
-          </button>
-        </div>
-        <div className={styles.achievementsGrid}>
-          <div className={styles.achievementItem}>
-            <div className={styles.achievementLabel}>
-              <span>Meta de alunos</span>
-              <span className={styles.achievementPercent}>
-                {stats?.totalStudents ? Math.min(Math.round((stats.totalStudents / 1000) * 100), 100) : 0}%
-              </span>
-            </div>
-            <div className={styles.achievementBar}>
-              <div 
-                className={styles.achievementFill}
-                style={{ 
-                  width: `${stats?.totalStudents ? Math.min(Math.round((stats.totalStudents / 1000) * 100), 100) : 0}%`,
-                  background: 'linear-gradient(90deg, #2563EB, #2563EBdd)'
-                }}
-              />
-            </div>
-          </div>
-          <div className={styles.achievementItem}>
-            <div className={styles.achievementLabel}>
-              <span>Taxa de retenção</span>
-              <span className={styles.achievementPercent}>
-                {stats?.approvalRate || 0}%
-              </span>
-            </div>
-            <div className={styles.achievementBar}>
-              <div 
-                className={styles.achievementFill}
-                style={{ 
-                  width: `${stats?.approvalRate || 0}%`,
-                  background: 'linear-gradient(90deg, #10B981, #10B981dd)'
-                }}
-              />
-            </div>
-          </div>
-          <div className={styles.achievementItem}>
-            <div className={styles.achievementLabel}>
-              <span>Matrículas ativas</span>
-              <span className={styles.achievementPercent}>
-                {stats?.totalEnrollments ? Math.min(Math.round((stats.activeEnrollments / stats.totalEnrollments) * 100), 100) : 0}%
-              </span>
-            </div>
-            <div className={styles.achievementBar}>
-              <div 
-                className={styles.achievementFill}
-                style={{ 
-                  width: `${stats?.totalEnrollments ? Math.min(Math.round((stats.activeEnrollments / stats.totalEnrollments) * 100), 100) : 0}%`,
-                  background: 'linear-gradient(90deg, #8B5CF6, #8B5CF6dd)'
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Quick Actions */}
       <div className={styles.quickActions}>
         <div className={styles.quickActionsHeader}>
@@ -316,9 +261,10 @@ const loadDashboardData = async () => {
           </span>
         </div>
         <div className={styles.quickActionsGrid}>
-          {quickActions.map((action, index) => (
-            <button 
-              key={index} 
+          {quickActions.filter(action => hasAnyPermission(action.permissions)).map((action, index) => (
+            <Link
+              key={action.href}
+              href={action.href}
               className={styles.quickAction}
               style={{ 
                 animationDelay: `${0.1 + index * 0.05}s`,
@@ -330,10 +276,13 @@ const loadDashboardData = async () => {
               </div>
               <span className={styles.quickActionLabel}>{action.label}</span>
               <ArrowUpRight size={12} className={styles.quickActionArrow} />
-            </button>
+            </Link>
           ))}
         </div>
       </div>
+
+      {/* Gráficos */}
+      <DashboardCharts />
 
       {/* Main Grid */}
       <div className={styles.mainGrid}>
@@ -346,7 +295,7 @@ const loadDashboardData = async () => {
         <div className={styles.gridItem} style={{ animationDelay: '0.6s' }}>
           <UpcomingEvents
             events={events}
-            onViewAll={() => console.log('Ver todos')}
+            onViewAll={() => router.push('/calendar')}
             onToggleNotification={(id) => console.log('Toggle:', id)}
           />
         </div>

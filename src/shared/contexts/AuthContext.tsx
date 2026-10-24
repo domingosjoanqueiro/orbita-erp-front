@@ -36,6 +36,17 @@ export interface User {
     teacherNumber: string;
     fullName: string;
   } | null;
+  // Preenchido quando o utilizador está associado a um aluno (portal do aluno)
+  student?: {
+    uuid: string;
+    studentNumber: string;
+    fullName: string;
+  } | null;
+}
+
+// Página inicial de cada tipo de utilizador
+export function homePathFor(user: Pick<User, 'student'> | null | undefined): string {
+  return user?.student ? '/student' : '/dashboard';
 }
 
 interface AuthContextType {
@@ -45,7 +56,7 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string , confirmPassword: string) => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<User>;
   mustChangePassword: boolean;
 }
 
@@ -77,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       roles: userData.roles || [],
       company: data.company || userData.company || { id: 0, uuid: '', name: '' },
       teacher: userData.teacher ?? null,
+      student: userData.student ?? null,
     };
   };
 
@@ -128,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userData);
       setMustChangePassword(userData.mustChangePassword || false);
       localStorage.setItem(COMPANY_USER_KEY, JSON.stringify(userData));
+      return userData;
     } catch (error) {
       console.error('Erro ao buscar usuário:', error);
       throw error;
@@ -138,13 +151,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       startLoading();
       await authService.changePassword({ currentPassword, newPassword, confirmPassword });
-      
+
+      // O token atual ainda diz "tem de alterar a senha": renova-o para a API deixar de bloquear
+      const storedRefresh = localStorage.getItem(COMPANY_REFRESH_TOKEN_KEY);
+      if (storedRefresh) {
+        try {
+          const refreshed = await authService.refreshToken(storedRefresh);
+          const tokens = (refreshed as unknown as { data?: { accessToken?: string; refreshToken?: string } })?.data ?? refreshed;
+          if (tokens?.accessToken) {
+            localStorage.setItem(COMPANY_TOKEN_KEY, tokens.accessToken);
+            document.cookie = `${COMPANY_TOKEN_KEY}=${tokens.accessToken}; path=/; max-age=3600; SameSite=Lax`;
+          }
+          if (tokens?.refreshToken) {
+            localStorage.setItem(COMPANY_REFRESH_TOKEN_KEY, tokens.refreshToken);
+            document.cookie = `${COMPANY_REFRESH_TOKEN_KEY}=${tokens.refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+          }
+        } catch {
+          // Se a renovação falhar, o próximo login resolve
+        }
+      }
+      document.cookie = `mustChangePassword=false; path=/; max-age=3600; SameSite=Lax`;
+
       // Atualizar usuário
-      await refreshUser();
+      const updatedUser = await refreshUser();
       showSuccess('Senha alterada!', 'Sua senha foi atualizada com sucesso');
       
-      // Redirecionar para dashboard
-      router.push('/dashboard');
+      // Redirecionar para a página inicial (alunos: portal do aluno)
+      router.push(homePathFor(updatedUser));
     } catch (error: any) {
       console.error('Erro ao alterar senha:', error);
       const message = error.response?.data?.message || 'Erro ao alterar senha';
@@ -201,8 +234,9 @@ const login = async (identifier: string, password: string) => {
     localStorage.setItem(COMPANY_USER_KEY, JSON.stringify(userData));
 
     // A resposta do login não traz roles/permissões; carrega o perfil completo
+    let fullUser: User = userData;
     try {
-      await refreshUser();
+      fullUser = await refreshUser();
     } catch {
       // Mantém os dados básicos do login; as permissões serão carregadas no próximo arranque
     }
@@ -213,11 +247,11 @@ const login = async (identifier: string, password: string) => {
     showSuccess('Bem-vindo!', `Olá ${userData.firstName || 'Usuário'}!`);
 
     // Redirecionar
-    console.log('🔄 Redirecionando para:', userData.mustChangePassword ? '/change-password' : '/dashboard');
+    console.log('🔄 Redirecionando para:', userData.mustChangePassword ? '/change-password' : homePathFor(fullUser));
     if (userData.mustChangePassword) {
       router.push('/change-password');
     } else {
-      router.push('/dashboard');
+      router.push(homePathFor(fullUser));
     }
     
   } catch (error: any) {

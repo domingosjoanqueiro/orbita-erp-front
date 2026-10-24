@@ -13,32 +13,26 @@ export function middleware(request: NextRequest) {
   const isPlatformRoute = platformRoutes.some(route => pathname.startsWith(route));
 
   // Rotas das empresas (Company Users)
-  const isCompanyRoute = pathname === '/' || 
-                         pathname === '/dashboard' ||
-                         pathname === '/login' ||
-                         pathname === '/change-password' ||
-                         pathname.startsWith('/academic/enrollments') ||
-                         pathname.startsWith('/users') ||
-                         pathname.startsWith('/roles') ||
-                         pathname.startsWith('/company/info')||
-                         pathname.startsWith('/academic/academic-years')||
-                         pathname.startsWith('/academic/academic-structure')||
-                         pathname.startsWith('/academic/program-settings')||
-                         pathname.startsWith('/academic/subjects')||
-                         pathname.startsWith('/academic/teachers')||
-                         pathname.startsWith('/academic/students')||
-                         pathname.startsWith('/academic/enrollments')||
-                         pathname.startsWith('/academic/teacher-assignments')||
-                         pathname.startsWith('/academic/grades')||
-                         pathname.startsWith('/academic/classes') ||
-                         pathname.startsWith('/academic/grade-subjects')||
-                         pathname.startsWith('/academic/assessments')||
-                         pathname.startsWith('/academic/my-classes')||
-                         pathname.startsWith('/notifications')||
-                         pathname.startsWith('/academic/assessment-rules')||
-                         pathname.startsWith('/attendance')||
-                         pathname.startsWith('/academic-reports')||
-                         pathname.startsWith('/transcripts');
+  const companyExact = ['/', '/dashboard', '/login', '/change-password', '/student', '/hr'];
+  const companyPrefixes = [
+    '/academic/',
+    '/users',
+    '/roles',
+    '/company/',
+    '/notifications',
+    '/attendance',
+    '/academic-reports',
+    '/reports',
+    '/transcripts',
+    '/finance',
+    '/calendar',
+    '/hr/',
+    '/settings',
+    '/profile',
+    '/student/',
+  ];
+  const isCompanyRoute =
+    companyExact.includes(pathname) || companyPrefixes.some(prefix => pathname.startsWith(prefix));
 
   // Tokens
   const platformToken = request.cookies.get(PLATFORM_TOKEN_KEY)?.value;

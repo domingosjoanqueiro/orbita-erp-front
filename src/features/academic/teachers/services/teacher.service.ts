@@ -27,7 +27,6 @@ class TeacherService extends ApiService {
   }> {
     const response = await this.get<any>(`${this.basePath}`, { params: filters });
     
-    console.log('📥 TeacherService.getAll - Resposta:', response);
     const extracted = extractApiList<TeacherWithUser>(response);
     return {
       data: extracted.data,
@@ -45,7 +44,6 @@ class TeacherService extends ApiService {
 
   async create(data: CreateTeacherRequest): Promise<TeacherResponseWithCredentials> {
     const response = await this.post<any>(`${this.basePath}`, data);
-    console.log('📥 TeacherService.create - Resposta:', response);
     return extractApiData<TeacherResponseWithCredentials>(response);
   }
 
@@ -64,15 +62,23 @@ class TeacherService extends ApiService {
     return extractApiData<{ success: boolean }>(response);
   }
 
-  // ✅ Método para obter o próximo número de professor (se existir)
-  async getNextNumber(): Promise<string> {
-    try {
-      const response = await this.get<any>(`${this.basePath}/next-number`);
-      return extractApiData<{ number: string }>(response).number;
-    } catch {
-      // Fallback: gerar número localmente se o endpoint não existir
-      return `PROF-${String(Date.now()).slice(-6)}`;
-    }
+  // ---------------------------------------------------------------
+  // Acesso do professor ao sistema
+  // ---------------------------------------------------------------
+
+  async createUser(uuid: string): Promise<{ userId: number; username: string; temporaryPassword: string }> {
+    const response = await this.post<any>(`${this.basePath}/${uuid}/create-user`);
+    return extractApiData(response);
+  }
+
+  async resetPassword(uuid: string): Promise<{ userId: number; username: string; temporaryPassword: string }> {
+    const response = await this.post<any>(`${this.basePath}/${uuid}/reset-password`);
+    return extractApiData(response);
+  }
+
+  async setAccessStatus(uuid: string, isActive: boolean): Promise<TeacherWithUser> {
+    const response = await this.patch<any>(`${this.basePath}/${uuid}/access`, { isActive });
+    return extractApiData<TeacherWithUser>(response);
   }
 }
 

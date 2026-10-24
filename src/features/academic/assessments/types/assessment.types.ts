@@ -45,6 +45,8 @@ export interface AssessmentPeriodState {
     status: SubmissionStatus | null;
     isEditable: boolean;
     returnedReason: string | null;
+    // notas ainda por lançar no período (todas as avaliações × alunos)
+    missingScores?: number;
     submittedAt: string | null;
     publishedAt: string | null;
 }
@@ -291,6 +293,15 @@ export interface TeacherAssignmentOption {
     subjectName: string;
     academicYearName: string;
     academicYearUuid: string;
+}
+
+export interface TeacherAcademicYear {
+    uuid: string;
+    name: string;
+    startDate: string | null;
+    endDate: string | null;
+    assignmentsCount: number;
+    isCurrent: boolean;
 }
 
 export interface ClassOption {

@@ -29,7 +29,6 @@ class StudentService extends ApiService {
   }> {
     const response = await this.get<any>(`${this.basePath}`, { params: filters });
     
-    console.log('📥 StudentService.getAll - Resposta:', response);
     const extracted = extractApiList<StudentWithUser>(response);
     return {
       data: extracted.data,
@@ -48,7 +47,6 @@ class StudentService extends ApiService {
   // ✅ CREATE - JÁ CRIA O USUÁRIO AUTOMATICAMENTE
   async create(data: CreateStudentRequest): Promise<StudentResponseWithCredentials> {
     const response = await this.post<any>(`${this.basePath}`, data);
-    console.log('📥 StudentService.create - Resposta:', response);
     return extractApiData<StudentResponseWithCredentials>(response);
   }
 
@@ -104,46 +102,23 @@ class StudentService extends ApiService {
     userId: number;
   }> {
     const response = await this.post<any>(`${this.basePath}/${studentUuid}/create-user`);
-    console.log('📥 StudentService.createUser - Resposta:', response);
     return extractApiData<{ username: string; temporaryPassword: string; userId: number }>(response);
   }
 
   /**
-   * ✅ Redefine a senha do usuário de um estudante
-   * Gera uma nova senha temporária
+   * Gera uma nova senha temporária para o acesso do estudante
    */
-  async resetPassword(userUuid: string): Promise<{ 
-    temporaryPassword: string;
-    username: string;
-  }> {
-    const response = await this.post<any>(`/system/users/${userUuid}/reset-password`);
-    console.log('📥 StudentService.resetPassword - Resposta:', response);
-    return extractApiData<{ temporaryPassword: string; username: string }>(response);
+  async resetPassword(studentUuid: string): Promise<{ userId: number; username: string; temporaryPassword: string }> {
+    const response = await this.post<any>(`${this.basePath}/${studentUuid}/reset-password`);
+    return extractApiData(response);
   }
 
   /**
-   * ✅ Ativa ou desativa o usuário de um estudante
+   * Ativa ou desativa só o acesso (a ficha do estudante não muda)
    */
-  async toggleUserStatus(userUuid: string, isActive: boolean): Promise<{ 
-    success: boolean;
-    isActive: boolean;
-  }> {
-    const response = await this.patch<any>(`/system/users/${userUuid}/status`, { isActive });
-    console.log('📥 StudentService.toggleUserStatus - Resposta:', response);
-    return extractApiData<{ success: boolean; isActive: boolean }>(response);
-  }
-
-  /**
-   * ✅ Verifica se o estudante já possui usuário
-   */
-  async checkUserExists(studentUuid: string): Promise<{ 
-    hasUser: boolean;
-    userId?: number;
-    username?: string;
-  }> {
-    const response = await this.get<any>(`${this.basePath}/${studentUuid}/user-status`);
-    console.log('📥 StudentService.checkUserExists - Resposta:', response);
-    return extractApiData<{ hasUser: boolean; userId?: number; username?: string }>(response);
+  async setAccessStatus(studentUuid: string, isActive: boolean): Promise<StudentWithUser> {
+    const response = await this.patch<any>(`${this.basePath}/${studentUuid}/access`, { isActive });
+    return extractApiData<StudentWithUser>(response);
   }
 }
 

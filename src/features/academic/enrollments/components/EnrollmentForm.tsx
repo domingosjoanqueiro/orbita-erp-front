@@ -3,6 +3,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { DOCUMENT_TYPE_OPTIONS } from '@/shared/constants/document-types';
+import { toDateInputValue } from '@/shared/utils/date.utils';
 import { useForm } from 'react-hook-form';
 import {
     User,
@@ -176,13 +178,6 @@ const STUDENT_STATUS_OPTIONS = [
 ];
 
 // ✅ Opções de Documento
-const DOCUMENT_TYPE_OPTIONS = [
-    { value: '', label: 'Selecione...' },
-    { value: 'BI', label: 'Bilhete de Identidade' },
-    { value: 'PASSPORT', label: 'Passaporte' },
-    { value: 'DIRE', label: 'DIRE' },
-    { value: 'NUIT', label: 'NUIT' },
-];
 
 // ✅ Componente para mostrar credenciais
 interface CredentialsModalProps {
@@ -347,17 +342,9 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
     const editDataApplied = useRef(false);
 
     // ✅ Função auxiliar para formatar data para input type="date"
-    const formatDateToInput = (date: string | undefined | null): string => {
-        if (!date) return new Date().toISOString().split('T')[0];
-        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
-        try {
-            const d = new Date(date);
-            if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
-            return d.toISOString().split('T')[0];
-        } catch {
-            return new Date().toISOString().split('T')[0];
-        }
-    };
+    // Valor para input type="date" (sem desvio de fuso horário); vazio = hoje
+    const formatDateToInput = (date: string | undefined | null): string =>
+        toDateInputValue(date) || toDateInputValue(new Date());
 
     // ✅ Formulário do Estudante
     const {
@@ -389,7 +376,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
             guardianName: null,
             guardianPhone: null,
             guardianRelationship: null,
-            admissionDate: new Date().toISOString().split('T')[0],
+            admissionDate: toDateInputValue(new Date()),
             studentStatus: 'ACTIVE',
             remarks: null,
             isActive: true,
@@ -408,7 +395,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
         defaultValues: {
             gradeUuid: '',
             classUuid: '',
-            enrollmentDate: new Date().toISOString().split('T')[0],
+            enrollmentDate: toDateInputValue(new Date()),
             enrollmentStatus: 'ACTIVE',
             remarks: null,
             isActive: true,
@@ -765,7 +752,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
                     address: data.address || null,
                     phone: data.phone || null,
                     email: data.email || null,
-                    documentType: documentTypeValue,
+                    documentType: documentTypeValue || null,
                     documentNumber: data.documentNumber || null,
                     fatherFullName: data.fatherFullName || null,
                     motherFullName: data.motherFullName || null,

@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 import {
     User,
     X,
@@ -10,13 +12,10 @@ import {
     Phone,
     Calendar,
     FileText,
-    MapPin,
     Briefcase,
     Award,
     Shield,
     AlertCircle,
-    Copy,
-    Check,
     ChevronRight,
     ChevronLeft,
 } from 'lucide-react';
@@ -24,13 +23,16 @@ import { Input } from '@/shared/components/ui/Input/Input';
 import { Select } from '@/shared/components/ui/Select/Select';
 import { Textarea } from '@/shared/components/ui/Textarea/Textarea';
 import { Button } from '@/shared/components/ui/Button/Button';
-import { Modal } from '@/shared/components/ui/Modal/Modal';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { useLoading } from '@/shared/contexts/LoadingContext';
 import { teacherService } from '../services/teacher.service';
 import { academicAccessSettingsService } from '@/features/academic/academic-access-settings/services/academic-access-settings.service';
 import { roleService } from '@/features/identity/roles/services/role.service';
-import type { Teacher, Gender, DocumentType } from '../types/teacher.types';
+import { CredentialsDisplay } from '@/features/academic/shared/components/CredentialsDisplay';
+import { DOCUMENT_TYPE_OPTIONS } from '@/shared/constants/document-types';
+import { toDateInputValue } from '@/shared/utils/date.utils';
+import { getApiErrorMessage, getApiFieldErrors } from '@/shared/utils/api.utils';
+import type { Teacher, DocumentType } from '../types/teacher.types';
 import type { Role } from '@/features/identity/roles/types/role.types';
 import styles from './TeacherForm.module.css';
 
@@ -92,246 +94,148 @@ const STEPS: Step[] = [
     },
 ];
 
-// ✅ Componente para mostrar credenciais
-interface CredentialsModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    teacherName: string;
-    username: string;
-    temporaryPassword: string;
-}
-
-const CredentialsModal: React.FC<CredentialsModalProps> = ({
-    isOpen,
-    onClose,
-    teacherName,
-    username,
-    temporaryPassword,
-}) => {
-    const [copied, setCopied] = useState<'username' | 'password' | null>(null);
-
-    const handleCopy = async (text: string, type: 'username' | 'password') => {
-        try {
-            await navigator.clipboard.writeText(text);
-            setCopied(type);
-            setTimeout(() => setCopied(null), 2000);
-        } catch (error) {
-            console.error('Erro ao copiar:', error);
-        }
-    };
-
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Professor Cadastrado!" size="md">
-            <div className={styles.credentialsModal}>
-                <div className={styles.credentialsSuccessIcon}>
-                    <CheckCircle size={48} className={styles.credentialsSuccessIconSvg} />
-                </div>
-
-                <h3 className={styles.credentialsTitle}>
-                    Professor {teacherName} cadastrado com sucesso!
-                </h3>
-
-                <div className={styles.credentialsInfo}>
-                    <p className={styles.credentialsSubtitle}>
-                        Acesso ao sistema criado. Guarde as credenciais abaixo:
-                    </p>
-
-                    <div className={styles.credentialsItems}>
-                        <div className={styles.credentialsItem}>
-                            <div className={styles.credentialsItemLabel}>
-                                <User size={14} />
-                                <span>Utilizador</span>
-                            </div>
-                            <div className={styles.credentialsItemValue}>
-                                <span>{username}</span>
-                                <button
-                                    className={styles.credentialsCopyBtn}
-                                    onClick={() => handleCopy(username, 'username')}
-                                    title="Copiar utilizador"
-                                >
-                                    {copied === 'username' ? (
-                                        <Check size={14} className={styles.credentialsCopied} />
-                                    ) : (
-                                        <Copy size={14} />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className={styles.credentialsItem}>
-                            <div className={styles.credentialsItemLabel}>
-                                <Shield size={14} />
-                                <span>Senha temporária</span>
-                            </div>
-                            <div className={styles.credentialsItemValue}>
-                                <span>{temporaryPassword}</span>
-                                <button
-                                    className={styles.credentialsCopyBtn}
-                                    onClick={() => handleCopy(temporaryPassword, 'password')}
-                                    title="Copiar senha"
-                                >
-                                    {copied === 'password' ? (
-                                        <Check size={14} className={styles.credentialsCopied} />
-                                    ) : (
-                                        <Copy size={14} />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className={styles.credentialsWarning}>
-                        <AlertCircle size={16} />
-                        <span>O professor deverá alterar a senha no primeiro acesso.</span>
-                    </div>
-
-                    <Button
-                        variant="primary"
-                        onClick={onClose}
-                        className={styles.credentialsCloseBtn}
-                        fullWidth
-                    >
-                        Entendi, continuar
-                    </Button>
-                </div>
-            </div>
-        </Modal>
-    );
+const FIELD_LABELS: Record<string, string> = {
+    firstName: 'Nome',
+    middleName: 'Nome do meio',
+    lastName: 'Apelido',
+    gender: 'Género',
+    birthDate: 'Data de nascimento',
+    phone: 'Telefone',
+    email: 'Email',
+    documentType: 'Tipo de documento',
+    documentNumber: 'Número do documento',
+    hireDate: 'Data de contratação',
+    specialization: 'Especialização',
+    address: 'Endereço',
 };
+
+// Passo de cada campo (para voltar ao passo com erro devolvido pela API)
+const FIELD_STEP: Record<string, number> = {
+    firstName: 0, middleName: 0, lastName: 0, gender: 0, birthDate: 0,
+    phone: 1, email: 1, documentType: 1, documentNumber: 1, address: 1,
+    hireDate: 2, specialization: 2,
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const TeacherForm: React.FC<TeacherFormProps> = ({
     teacher,
     onSuccess,
     onCancel,
 }) => {
+    const router = useRouter();
     const isEditing = !!teacher;
+    // Na edição não há passo de acesso (o acesso gere-se nos detalhes do professor)
+    const steps = isEditing ? STEPS.filter(step => step.id !== 'access') : STEPS;
+    const accessStep = steps.findIndex(step => step.id === 'access');
     const [currentStep, setCurrentStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [roles, setRoles] = useState<Role[]>([]);
     const [teacherRole, setTeacherRole] = useState<Role | null>(null);
-    const [isLoadingConfig, setIsLoadingConfig] = useState(true);
-    const [showCredentialsModal, setShowCredentialsModal] = useState(false);
-    const [credentials, setCredentials] = useState<{ username: string; temporaryPassword: string } | null>(null);
-    const { showSuccess, showError } = useToast();
+    const [isLoadingConfig, setIsLoadingConfig] = useState(!isEditing);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [credentials, setCredentials] = useState<{ name: string; username: string; temporaryPassword: string } | null>(null);
+    const { showSuccess, showError, showWarning } = useToast();
     const { startLoading, stopLoading } = useLoading();
 
-    // ✅ Carregar configuração académica e roles
+    // Role configurada para professores (só é precisa para criar)
     useEffect(() => {
+        if (isEditing) return;
         const loadConfig = async () => {
             try {
                 setIsLoadingConfig(true);
-
-                const rolesResponse = await roleService.getAll({ limit: 100 });
-                setRoles(rolesResponse.data || []);
-
-                const config = await academicAccessSettingsService.getAcademicSettings();
-
-                if (config.teacherRoleId) {
-                    const foundRole = (rolesResponse.data || []).find(r => r.id === config.teacherRoleId);
-                    setTeacherRole(foundRole || null);
-                } else {
-                    setTeacherRole(null);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar configuração:', error);
+                const [rolesResponse, config] = await Promise.all([
+                    roleService.getAll({ limit: 100 }),
+                    academicAccessSettingsService.getAcademicSettings(),
+                ]);
+                const found = config.teacherRoleId
+                    ? (rolesResponse.data || []).find(r => r.id === config.teacherRoleId)
+                    : null;
+                setTeacherRole(found || null);
+            } catch {
                 showError('Erro', 'Não foi possível carregar a configuração académica');
             } finally {
                 setIsLoadingConfig(false);
             }
         };
         loadConfig();
-    }, []);
+    }, [isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ✅ useForm sem zodResolver
     const {
-        register,
         handleSubmit,
-        formState: { errors, isSubmitting: isFormSubmitting },
         watch,
-        setValue,
-        trigger,
+        setValue: setFormValue,
     } = useForm<TeacherFormData>({
         defaultValues: {
             firstName: teacher?.firstName || '',
             middleName: teacher?.middleName || null,
             lastName: teacher?.lastName || '',
             gender: teacher?.gender || 'MALE',
-            birthDate: teacher?.birthDate ? new Date(teacher.birthDate).toISOString().split('T')[0] : '',
+            birthDate: toDateInputValue(teacher?.birthDate),
             phone: teacher?.phone || null,
             email: teacher?.email || null,
             address: teacher?.address || null,
             documentType: (teacher?.documentType as DocumentType) || null,
             documentNumber: teacher?.documentNumber || null,
-            hireDate: teacher?.hireDate ? new Date(teacher.hireDate).toISOString().split('T')[0] : '',
+            hireDate: toDateInputValue(teacher?.hireDate),
             specialization: teacher?.specialization || '',
-            isActive: true,
+            isActive: teacher?.isActive ?? true,
         },
     });
 
     const watchedValues = watch();
 
-    // ✅ Validação manual
-    const validateStepFields = (step: number): boolean => {
-        const fields = getFieldsForStep(step);
-        let isValid = true;
-        
-        fields.forEach(field => {
-            const value = watchedValues[field as keyof TeacherFormData];
-            if (field === 'firstName' && !value) {
-                isValid = false;
-                showError('Validação', 'Nome é obrigatório');
-            } else if (field === 'lastName' && !value) {
-                isValid = false;
-                showError('Validação', 'Apelido é obrigatório');
-            } else if (field === 'gender' && !value) {
-                isValid = false;
-                showError('Validação', 'Género é obrigatório');
-            } else if (field === 'birthDate' && !value) {
-                isValid = false;
-                showError('Validação', 'Data de nascimento é obrigatória');
-            } else if (field === 'hireDate' && !value) {
-                isValid = false;
-                showError('Validação', 'Data de contratação é obrigatória');
-            } else if (field === 'specialization' && !value) {
-                isValid = false;
-                showError('Validação', 'Especialização é obrigatória');
-            }
-
-        });
-        
-        return isValid;
+    // Ao corrigir um campo o erro desaparece
+    const setValue = <K extends keyof TeacherFormData>(field: K, value: TeacherFormData[K]) => {
+        setFormValue(field, value as never);
+        if (fieldErrors[field]) {
+            setFieldErrors(prev => {
+                const next = { ...prev };
+                delete next[field];
+                return next;
+            });
+        }
     };
 
-    const getFieldsForStep = (step: number): (keyof TeacherFormData)[] => {
-        switch (step) {
-            case 0:
-                return ['firstName', 'middleName', 'lastName', 'gender', 'birthDate'];
-            case 1:
-                return ['phone', 'email', 'address', 'documentType', 'documentNumber'];
-            case 2:
-                return ['hireDate', 'specialization'];
-            case 3:
-                return [];
-            default:
-                return [];
+    const validateStep = (step: number): Record<string, string> => {
+        const v = watchedValues;
+        const found: Record<string, string> = {};
+        const today = toDateInputValue(new Date());
+        if (steps[step]?.id === 'personal') {
+            if (!v.firstName?.trim() || v.firstName.trim().length < 2) found.firstName = 'Nome é obrigatório (mínimo 2 letras)';
+            if (!v.lastName?.trim() || v.lastName.trim().length < 2) found.lastName = 'Apelido é obrigatório (mínimo 2 letras)';
+            if (!v.gender) found.gender = 'Género é obrigatório';
+            if (!v.birthDate) found.birthDate = 'Data de nascimento é obrigatória';
+            else if (v.birthDate > today) found.birthDate = 'A data de nascimento não pode ser futura';
         }
+        if (steps[step]?.id === 'contact') {
+            if (v.email && !EMAIL_PATTERN.test(v.email.trim())) found.email = 'Email inválido';
+            if (v.documentType && !v.documentNumber?.trim()) found.documentNumber = 'Indique o número do documento';
+            if (!v.documentType && v.documentNumber?.trim()) found.documentType = 'Indique o tipo de documento';
+        }
+        if (steps[step]?.id === 'professional') {
+            if (!v.hireDate) found.hireDate = 'Data de contratação é obrigatória';
+            else if (v.birthDate && v.hireDate < v.birthDate) found.hireDate = 'Não pode ser anterior à data de nascimento';
+        }
+        return found;
     };
 
     const handleNext = async () => {
-        if (currentStep === 3) {
-            if (!teacherRole) {
-                showError('Configuração necessária', 'A Role de Professor ainda não foi configurada para esta empresa.');
-                return;
-            }
+        if (currentStep === accessStep && !teacherRole) {
+            showError('Configuração necessária', 'A Role de Professor ainda não foi configurada para esta empresa.');
+            return;
         }
 
-        const isValid = validateStepFields(currentStep);
-        if (isValid) {
-            if (currentStep === STEPS.length - 1) {
-                handleSubmit(onSubmit)();
-            } else {
-                setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1));
-            }
+        const stepErrors = validateStep(currentStep);
+        if (Object.keys(stepErrors).length > 0) {
+            setFieldErrors(stepErrors);
+            showError('Verifique os campos', Object.values(stepErrors)[0]);
+            return;
+        }
+
+        if (currentStep === steps.length - 1) {
+            handleSubmit(onSubmit)();
+        } else {
+            setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
         }
     };
 
@@ -339,60 +243,63 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
         setCurrentStep(prev => Math.max(prev - 1, 0));
     };
 
-    // ✅ Função de submit
     const onSubmit = async (data: TeacherFormData) => {
+        // garante que os passos anteriores continuam válidos
+        for (let step = 0; step < steps.length; step++) {
+            const stepErrors = validateStep(step);
+            if (Object.keys(stepErrors).length > 0) {
+                setFieldErrors(stepErrors);
+                setCurrentStep(step);
+                showError('Verifique os campos', Object.values(stepErrors)[0]);
+                return;
+            }
+        }
+
         try {
             setIsSubmitting(true);
             startLoading();
 
-            // ✅ Garantir que documentType seja o tipo correto
-            const documentTypeValue = data.documentType as DocumentType | null;
-
             const payload = {
-                firstName: data.firstName,
-                middleName: data.middleName || null,
-                lastName: data.lastName,
+                firstName: data.firstName.trim(),
+                middleName: data.middleName?.trim() || null,
+                lastName: data.lastName.trim(),
                 gender: data.gender,
                 birthDate: data.birthDate,
-                phone: data.phone || null,
-                email: data.email || null,
-                address: data.address || null,
-                documentType: documentTypeValue,
-                documentNumber: data.documentNumber || null,
+                phone: data.phone?.trim() || null,
+                email: data.email?.trim() || null,
+                address: data.address?.trim() || null,
+                documentType: data.documentType || null,
+                documentNumber: data.documentNumber?.trim() || null,
                 hireDate: data.hireDate,
-                specialization: data.specialization || null,
-                isActive: data.isActive,
+                specialization: data.specialization?.trim() || null,
             };
 
-            let response;
-
             if (isEditing && teacher) {
-                const updatePayload: any = { ...payload };
-                delete updatePayload.isActive;
-                response = await teacherService.update(teacher.uuid, updatePayload);
-                showSuccess('Professor atualizado', `Professor ${response.firstName} ${response.lastName} foi atualizado`);
+                const response = await teacherService.update(teacher.uuid, payload);
+                showSuccess('Professor atualizado', `${response.fullName} foi atualizado.`);
                 onSuccess();
-            } else {
-                response = await teacherService.create(payload);
-                showSuccess('Professor criado', `Professor ${response.firstName} ${response.lastName} foi criado com sucesso`);
-                if (response.credentials) {
-                    setCredentials(response.credentials);
-                    setShowCredentialsModal(true);
-                } else {
-                    onSuccess();
-                }
+                return;
             }
-        } catch (error: any) {
-            console.error('Erro ao salvar professor:', error);
 
-            let errorMessage = 'Erro ao salvar professor. Tente novamente.';
-            if (error.response?.data?.message) {
-                errorMessage = error.response.data.message;
-            } else if (error.response?.data?.errors) {
-                const messages = Object.values(error.response.data.errors).flat();
-                errorMessage = messages.join(', ');
+            const response = await teacherService.create({ ...payload, isActive: data.isActive });
+            if (response.portal) {
+                showSuccess('Professor criado', `${response.fullName} foi registado com acesso ao sistema.`);
+                setCredentials({ name: response.fullName, username: response.portal.username, temporaryPassword: response.portal.temporaryPassword });
+            } else {
+                showWarning('Professor criado sem acesso', 'O professor ficou inativo. Crie o acesso nos detalhes depois de o ativar.');
+                onSuccess();
             }
-            showError('Erro', errorMessage);
+        } catch (error) {
+            const apiFieldErrors = getApiFieldErrors(error);
+            if (Object.keys(apiFieldErrors).length > 0) {
+                setFieldErrors(apiFieldErrors);
+                const firstField = Object.keys(apiFieldErrors)[0];
+                const step = FIELD_STEP[firstField];
+                if (step !== undefined && step < steps.length) setCurrentStep(step);
+                showError('Verifique os campos', `${FIELD_LABELS[firstField] ?? firstField}: ${apiFieldErrors[firstField]}`);
+            } else {
+                showError('Erro', getApiErrorMessage(error, 'Erro ao guardar o professor. Tente novamente.'));
+            }
         } finally {
             setIsSubmitting(false);
             stopLoading();
@@ -400,17 +307,16 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
     };
 
     const handleCredentialsClose = () => {
-        setShowCredentialsModal(false);
         setCredentials(null);
         onSuccess();
     };
 
     const renderStep = () => {
-        const step = STEPS[currentStep];
+        const step = steps[currentStep];
         const StepIcon = step.icon;
 
-        switch (currentStep) {
-            case 0:
+        switch (step.id) {
+            case 'personal':
                 return (
                     <div className={styles.stepContent}>
                         <div className={styles.stepHeader}>
@@ -431,7 +337,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<User size={16} />}
                                     value={watchedValues.firstName || ''}
                                     onChange={(e) => setValue('firstName', e.target.value)}
-                                    error={errors.firstName?.message}
+                                    error={fieldErrors.firstName}
                                     fullWidth
                                 />
                             </div>
@@ -443,7 +349,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<User size={16} />}
                                     value={watchedValues.lastName || ''}
                                     onChange={(e) => setValue('lastName', e.target.value)}
-                                    error={errors.lastName?.message}
+                                    error={fieldErrors.lastName}
                                     fullWidth
                                 />
                             </div>
@@ -455,7 +361,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<User size={16} />}
                                     value={watchedValues.middleName || ''}
                                     onChange={(e) => setValue('middleName', e.target.value)}
-                                    error={errors.middleName?.message}
+                                    error={fieldErrors.middleName}
                                     fullWidth
                                 />
                             </div>
@@ -467,7 +373,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<Calendar size={16} />}
                                     value={watchedValues.birthDate || ''}
                                     onChange={(e) => setValue('birthDate', e.target.value)}
-                                    error={errors.birthDate?.message}
+                                    error={fieldErrors.birthDate}
                                     fullWidth
                                 />
                             </div>
@@ -481,7 +387,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     ]}
                                     value={watchedValues.gender || 'MALE'}
                                     onChange={(e) => setValue('gender', e.target.value as any)}
-                                    error={errors.gender?.message}
+                                    error={fieldErrors.gender}
                                     fullWidth
                                 />
                             </div>
@@ -489,7 +395,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                     </div>
                 );
 
-            case 1:
+            case 'contact':
                 return (
                     <div className={styles.stepContent}>
                         <div className={styles.stepHeader}>
@@ -511,7 +417,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<Mail size={16} />}
                                     value={watchedValues.email || ''}
                                     onChange={(e) => setValue('email', e.target.value)}
-                                    error={errors.email?.message}
+                                    error={fieldErrors.email}
                                     fullWidth
                                 />
                             </div>
@@ -523,7 +429,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<Phone size={16} />}
                                     value={watchedValues.phone || ''}
                                     onChange={(e) => setValue('phone', e.target.value)}
-                                    error={errors.phone?.message}
+                                    error={fieldErrors.phone}
                                     fullWidth
                                 />
                             </div>
@@ -531,16 +437,10 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                             <div className={styles.field}>
                                 <Select
                                     label="Tipo de Documento"
-                                    options={[
-                                        { value: '', label: 'Selecione...' },
-                                        { value: 'BI', label: 'Bilhete de Identidade' },
-                                        { value: 'PASSPORT', label: 'Passaporte' },
-                                        { value: 'DIRE', label: 'DIRE' },
-                                        { value: 'NUIT', label: 'NUIT' },
-                                    ]}
+                                    options={DOCUMENT_TYPE_OPTIONS}
                                     value={watchedValues.documentType || ''}
-                                    onChange={(e) => setValue('documentType', e.target.value as DocumentType | null)}
-                                    error={errors.documentType?.message}
+                                    onChange={(e) => setValue('documentType', (e.target.value || null) as DocumentType | null)}
+                                    error={fieldErrors.documentType}
                                     fullWidth
                                 />
                             </div>
@@ -552,7 +452,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<FileText size={16} />}
                                     value={watchedValues.documentNumber || ''}
                                     onChange={(e) => setValue('documentNumber', e.target.value)}
-                                    error={errors.documentNumber?.message}
+                                    error={fieldErrors.documentNumber}
                                     fullWidth
                                 />
                             </div>
@@ -571,7 +471,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                     </div>
                 );
 
-            case 2:
+            case 'professional':
                 return (
                     <div className={styles.stepContent}>
                         <div className={styles.stepHeader}>
@@ -592,7 +492,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<Calendar size={16} />}
                                     value={watchedValues.hireDate || ''}
                                     onChange={(e) => setValue('hireDate', e.target.value)}
-                                    error={errors.hireDate?.message}
+                                    error={fieldErrors.hireDate}
                                     fullWidth
                                 />
                             </div>
@@ -604,12 +504,13 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     leftIcon={<Award size={16} />}
                                     value={watchedValues.specialization || ''}
                                     onChange={(e) => setValue('specialization', e.target.value)}
-                                    error={errors.specialization?.message}
+                                    error={fieldErrors.specialization}
                                     fullWidth
                                     helpText="Área de atuação do professor"
                                 />
                             </div>
 
+                            {!isEditing && (
                             <div className={styles.field}>
                                 <label className={styles.toggleLabel}>
                                     <input
@@ -620,14 +521,15 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                     <span>Professor Ativo</span>
                                 </label>
                                 <p className={styles.toggleHelp}>
-                                    Professores inativos não aparecem nas listas do sistema
+                                    Professores inativos não aparecem nas listas e ficam sem acesso até serem ativados
                                 </p>
                             </div>
+                            )}
                         </div>
                     </div>
                 );
 
-            case 3:
+            case 'access':
                 return (
                     <div className={styles.stepContent}>
                         <div className={styles.stepHeader}>
@@ -678,9 +580,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                                         <Button
                                             variant="primary"
                                             size="sm"
-                                            onClick={() => {
-                                                window.location.href = '/academic/program-settings';
-                                            }}
+                                            onClick={() => router.push('/academic/program-settings')}
                                         >
                                             Configurar agora
                                         </Button>
@@ -696,12 +596,12 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
         }
     };
 
-    const isLastStep = currentStep === STEPS.length - 1;
+    const isLastStep = currentStep === steps.length - 1;
     const isFirstStep = currentStep === 0;
-    const progress = ((currentStep + 1) / STEPS.length) * 100;
+    const progress = ((currentStep + 1) / steps.length) * 100;
 
     const isNextDisabled = () => {
-        if (currentStep === 3) {
+        if (currentStep === accessStep) {
             return !teacherRole || isLoadingConfig;
         }
         return false;
@@ -719,7 +619,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                         />
                     </div>
                     <div className={styles.progressSteps}>
-                        {STEPS.map((step, index) => {
+                        {steps.map((step, index) => {
                             const StepIcon = step.icon;
                             const isActive = index <= currentStep;
                             const isCurrent = index === currentStep;
@@ -776,8 +676,8 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                             variant="primary"
                             onClick={handleNext}
                             icon={isLastStep ? <CheckCircle size={18} /> : <ChevronRight size={18} />}
-                            isLoading={isSubmitting || isFormSubmitting}
-                            disabled={isSubmitting || isFormSubmitting || isNextDisabled()}
+                            isLoading={isSubmitting}
+                            disabled={isSubmitting || isNextDisabled()}
                         >
                             {isLastStep ? (isEditing ? 'Atualizar' : 'Cadastrar Professor') : 'Próximo'}
                         </Button>
@@ -785,15 +685,16 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                 </div>
             </form>
 
-            {/* Credentials Modal */}
-            {credentials && (
-                <CredentialsModal
-                    isOpen={showCredentialsModal}
-                    onClose={handleCredentialsClose}
-                    teacherName={`${watchedValues.firstName} ${watchedValues.lastName}`}
+            {/* Credenciais do acesso criado com o professor */}
+            {credentials && typeof document !== 'undefined' && createPortal(
+                <CredentialsDisplay
+                    title={`Professor ${credentials.name} registado`}
                     username={credentials.username}
-                    temporaryPassword={credentials.temporaryPassword}
-                />
+                    password={credentials.temporaryPassword}
+                    personLabel="O professor"
+                    onClose={handleCredentialsClose}
+                />,
+                document.body
             )}
         </>
     );

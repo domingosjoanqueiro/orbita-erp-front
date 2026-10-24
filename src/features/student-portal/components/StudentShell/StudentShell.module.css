@@ -1,0 +1,501 @@
+/* Portal do aluno — estrutura mobile-first */
+
+.shell {
+  /* Tokens do portal (claro) */
+  --sp-bg: #F3F4FA;
+  --sp-surface: #FFFFFF;
+  --sp-surface-2: #F7F7FC;
+  --sp-border: #E7E8F2;
+  --sp-text: #12142B;
+  --sp-text-2: #5E6283;
+  --sp-text-3: #9A9DB8;
+  --sp-accent: #4F46E5;
+  --sp-accent-soft: #EEF0FF;
+  --sp-gradient: linear-gradient(135deg, #2563EB 0%, #4F46E5 55%, #7C3AED 100%);
+  --sp-shadow: 0 1px 2px rgba(18, 20, 43, 0.04), 0 8px 24px rgba(18, 20, 43, 0.06);
+
+  --tone-excellent: #059669;
+  --tone-excellent-soft: #E7F8F1;
+  --tone-good: #2563EB;
+  --tone-good-soft: #E9F0FF;
+  --tone-warning: #C2690B;
+  --tone-warning-soft: #FEF3E2;
+  --tone-danger: #DC2626;
+  --tone-danger-soft: #FDECEC;
+  --tone-neutral: #8B8FAD;
+  --tone-neutral-soft: #F0F1F7;
+
+  --tabbar-height: 64px;
+  --appbar-height: 60px;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--sp-bg);
+  color: var(--sp-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+:global([data-theme="dark"]) .shell {
+  --sp-bg: #0B0D1A;
+  --sp-surface: #151829;
+  --sp-surface-2: #1C2035;
+  --sp-border: #262A42;
+  --sp-text: #F1F2FA;
+  --sp-text-2: #A9ACC7;
+  --sp-text-3: #6C7090;
+  --sp-accent: #8B85FF;
+  --sp-accent-soft: rgba(124, 117, 255, 0.16);
+  --sp-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+
+  --tone-excellent: #34D399;
+  --tone-excellent-soft: rgba(52, 211, 153, 0.14);
+  --tone-good: #60A5FA;
+  --tone-good-soft: rgba(96, 165, 250, 0.14);
+  --tone-warning: #FBBF24;
+  --tone-warning-soft: rgba(251, 191, 36, 0.14);
+  --tone-danger: #F87171;
+  --tone-danger-soft: rgba(248, 113, 113, 0.14);
+  --tone-neutral: #8B8FAD;
+  --tone-neutral-soft: rgba(139, 143, 173, 0.14);
+}
+
+/* ---------- Área principal ---------- */
+
+.main {
+  min-width: 0;
+}
+
+.content {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 16px calc(var(--tabbar-height) + 28px + env(safe-area-inset-bottom));
+}
+
+/* ---------- Barra superior ---------- */
+
+.appBar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: calc(var(--appbar-height) + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 12px 0 16px;
+  background: color-mix(in srgb, var(--sp-bg) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+}
+
+.appBarBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.appBarTitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin-left: -8px;
+}
+
+.appBarTitle h1 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appBarActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--sp-gradient);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.iconButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--sp-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.iconButton:hover,
+.iconButton:focus-visible {
+  background: var(--sp-accent-soft);
+  outline: none;
+}
+
+.dot {
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 2px solid var(--sp-bg);
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 13px;
+  text-align: center;
+}
+
+.avatarSmall {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--sp-gradient);
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ---------- Barra de separadores (em baixo) ---------- */
+
+.tabBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  height: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+  padding: 0 4px env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--sp-surface) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-top: 1px solid var(--sp-border);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  color: var(--sp-text-3);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.tabIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 30px;
+  border-radius: 999px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.tabLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.tab:active .tabIcon {
+  transform: scale(0.92);
+}
+
+.tabActive {
+  color: var(--sp-accent);
+}
+
+.tabActive .tabIcon {
+  background: var(--sp-accent-soft);
+}
+
+/* ---------- Barra lateral (desktop) ---------- */
+
+.rail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .shell {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .tabBar {
+    display: none;
+  }
+
+  .content {
+    max-width: 880px;
+    padding: 8px 32px 48px;
+  }
+
+  .appBar {
+    padding: 0 32px;
+    height: 72px;
+  }
+
+  .appBarHome .appBarBrand {
+    visibility: hidden;
+  }
+
+  .rail {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100vh;
+    padding: 20px 16px;
+    background: var(--sp-gradient);
+    color: #FFFFFF;
+    overflow-y: auto;
+  }
+
+  .railBrand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+  }
+
+  .railBrand .brandMark {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+  }
+
+  .railBrand div {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .railBrand strong {
+    font-size: 1rem;
+  }
+
+  .railBrand span {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .railProfile {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 12px;
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+
+  .railProfile:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .avatarLarge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #FFFFFF;
+    color: #4F46E5;
+    font-weight: 800;
+  }
+
+  .railProfileText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .railProfileText strong {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .railProfileText span {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .railClass {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.14);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .railNav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .railLink {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .railLink:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+  }
+
+  .railLinkActive,
+  .railLinkActive:hover {
+    background: #FFFFFF;
+    color: #4F46E5;
+    box-shadow: 0 6px 18px rgba(17, 12, 80, 0.22);
+  }
+
+  .railBadge {
+    margin-left: auto;
+    min-width: 22px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .railFooter {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .railAction {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.85);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .railAction:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+  }
+}
+
+:global([data-theme="dark"]) .rail {
+  background: linear-gradient(160deg, #1E1B4B 0%, #241C5C 55%, #2E1065 100%);
+}
+
+/* ---------- Ecrã de arranque ---------- */
+
+.splash {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 55%, #7C3AED 100%);
+  color: #FFFFFF;
+}
+
+.splashMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 1.75rem;
+  font-weight: 800;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.splashText {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.9;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.94); opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splashMark { animation: none; }
+}

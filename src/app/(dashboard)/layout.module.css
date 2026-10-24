@@ -34,3 +34,21 @@
     margin-left: 0;
   }
 }
+/* Impressão (recibos, horários): só o conteúdo da página */
+@media print {
+  .layout > :first-child:not(.main),
+  .main > :first-child:not(.content) {
+    display: none !important;
+  }
+
+  .main,
+  .main.collapsed {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  .content {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}

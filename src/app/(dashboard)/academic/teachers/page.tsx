@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Users,
   Plus,
@@ -25,171 +25,215 @@ import {
   Briefcase,
   Calendar,
   FileText,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button/Button';
-import { Input } from '@/shared/components/ui/Input/Input';
 import { Badge } from '@/shared/components/ui/Badge/Badge';
 import { Table } from '@/shared/components/ui/Table/Table';
 import { Modal } from '@/shared/components/ui/Modal/Modal';
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog/ConfirmDialog';
 import { SkeletonCard } from '@/shared/components/ui/Skeleton/SkeletonCard';
-import { Select } from '@/shared/components/ui/Select/Select';
+import { Pagination } from '@/shared/components/ui/Pagination/Pagination';
 import { useLoading } from '@/shared/contexts/LoadingContext';
 import { useToast } from '@/shared/contexts/ToastContext';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+import { usePermission } from '@/shared/hooks/usePermission';
+import { getApiErrorMessage } from '@/shared/utils/api.utils';
+import { formatDisplayDate } from '@/shared/utils/date.utils';
 import { teacherService } from '@/features/academic/teachers/services/teacher.service';
 import { TeacherForm } from '@/features/academic/teachers/components/TeacherForm';
+import { TeacherDetails } from '@/features/academic/teachers/components/TeacherDetails';
 import type { TeacherWithUser, TeacherFilters } from '@/features/academic/teachers/types/teacher.types';
 import styles from './page.module.css';
 
 type ViewMode = 'cards' | 'table';
 
-const isActiveBoolean = (value: any): boolean => {
-  if (value === undefined || value === null) return false;
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return value === 1;
-  if (typeof value === 'string') {
-    const lower = value.toLowerCase().trim();
-    return lower === '1' || lower === 'true' || lower === 'yes' || lower === 'on';
-  }
-  return false;
-};
+const getStatusBadge = (isActive: boolean) => (
+  <Badge variant={isActive ? 'success' : 'error'} size="sm">
+    <span className={styles.statusBadge}>
+      {isActive ? <CheckCircle size={12} /> : <XCircle size={12} />}
+      {isActive ? 'Ativo' : 'Inativo'}
+    </span>
+  </Badge>
+);
 
-const getStatusBadge = (isActive: any) => {
-  const active = isActiveBoolean(isActive);
-  return (
-    <Badge variant={active ? 'success' : 'error'} size="sm">
-      <span className={styles.statusBadge}>
-        {active ? <CheckCircle size={12} /> : <XCircle size={12} />}
-        {active ? 'Ativo' : 'Inativo'}
-      </span>
-    </Badge>
-  );
-};
+const getGenderBadge = (gender: string) => (
+  <Badge variant="neutral" size="sm">
+    <span className={styles.genderBadge}>
+      <User size={10} />
+      {gender === 'MALE' ? 'Masculino' : 'Feminino'}
+    </span>
+  </Badge>
+);
 
-const getGenderBadge = (gender: string) => {
-  const label = gender === 'MALE' ? 'Masculino' : 'Feminino';
-  return (
-    <Badge variant="neutral" size="sm">
-      <span className={styles.genderBadge}>
-        <User size={10} />
-        {label}
-      </span>
+const getAccessBadge = (teacher: TeacherWithUser) =>
+  teacher.user ? (
+    <Badge variant={teacher.user.isActive ? 'info' : 'warning'} size="sm">
+      {teacher.user.isActive ? 'Com acesso' : 'Acesso inativo'}
     </Badge>
+  ) : (
+    <Badge variant="neutral" size="sm">Sem acesso</Badge>
   );
-};
 
 export default function TeachersPage() {
   const { startLoading, stopLoading, isLoading } = useLoading();
   const { showSuccess, showError } = useToast();
+  const { hasPermission } = usePermission();
+  const canCreate = hasPermission('teachers.create');
+  const canUpdate = hasPermission('teachers.update');
+  const canDelete = hasPermission('teachers.delete');
+  const canReadAssignments = hasPermission('teacherAssignments.read');
 
   const [teachers, setTeachers] = useState<TeacherWithUser[]>([]);
   const [total, setTotal] = useState(0);
-  const [filters, setFilters] = useState<TeacherFilters>({
-    page: 1,
-    limit: 10,
-  });
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState<TeacherWithUser | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loaded, setLoaded] = useState(false);
+  const [filters, setFilters] = useState<TeacherFilters>({ page: 1, limit: 10 });
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm.trim(), 400);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<TeacherWithUser | null>(null);
+  const [detailsTeacher, setDetailsTeacher] = useState<TeacherWithUser | null>(null);
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     type: 'delete' | 'toggle';
-    uuid?: string;
-    name?: string;
-    isActive?: boolean;
+    teacher?: TeacherWithUser;
   }>({ isOpen: false, type: 'delete' });
 
-  const loadTeachers = async () => {
+  // Ignora respostas antigas quando os filtros mudam depressa
+  const requestId = useRef(0);
+
+  const loadTeachers = useCallback(async () => {
+    const current = ++requestId.current;
     try {
       startLoading();
       const response = await teacherService.getAll({
         ...filters,
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
       });
-      const dataArray = response?.data || [];
-      setTeachers(dataArray.map((t: any) => ({ ...t, isActive: isActiveBoolean(t.isActive) })));
-      setTotal(response?.total || 0);
-    } catch (error: any) {
-      console.error('Erro ao carregar professores:', error);
-      showError('Erro', 'Não foi possível carregar os professores');
+      if (current !== requestId.current) return;
+      setTeachers(response.data.map(t => ({ ...t, isActive: Boolean(t.isActive) })));
+      setTotal(response.total);
+      setTotalPages(Math.max(1, response.totalPages));
+      // página vazia depois de excluir o último da página: recua uma
+      if (response.data.length === 0 && (filters.page ?? 1) > 1) {
+        setFilters(prev => ({ ...prev, page: Math.max(1, (prev.page ?? 1) - 1) }));
+      }
+    } catch (error) {
+      if (current !== requestId.current) return;
+      showError('Erro', getApiErrorMessage(error, 'Não foi possível carregar os professores'));
       setTeachers([]);
       setTotal(0);
     } finally {
       stopLoading();
+      if (current === requestId.current) setLoaded(true);
     }
-  };
+  }, [filters, debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadTeachers();
-  }, [filters.page, filters.limit, filters.isActive, filters.gender]);
+  }, [loadTeachers]);
 
-  const handleSearch = () => {
-    setFilters({ ...filters, page: 1 });
-    loadTeachers();
-  };
+  // Nova pesquisa volta à primeira página
+  useEffect(() => {
+    setFilters(prev => (prev.page === 1 ? prev : { ...prev, page: 1 }));
+  }, [debouncedSearch]);
+
+  const updateFilters = (changes: Partial<TeacherFilters>) =>
+    setFilters(prev => ({ ...prev, ...changes, page: 1 }));
+
+  // Recarrega a lista e a ficha aberta nos detalhes
+  const refresh = useCallback(async () => {
+    await loadTeachers();
+    if (detailsTeacher) {
+      try {
+        const fresh = await teacherService.getByUuid(detailsTeacher.uuid);
+        setDetailsTeacher({ ...fresh, isActive: Boolean(fresh.isActive) });
+      } catch {
+        setDetailsTeacher(null);
+      }
+    }
+  }, [loadTeachers, detailsTeacher]);
 
   const handleCreate = () => {
-    setSelectedTeacher(null);
-    setIsModalOpen(true);
+    setEditingTeacher(null);
+    setIsFormOpen(true);
   };
 
   const handleEdit = (teacher: TeacherWithUser) => {
-    setSelectedTeacher(teacher);
-    setIsModalOpen(true);
+    setEditingTeacher(teacher);
+    setIsFormOpen(true);
   };
 
-  const handleDelete = (teacher: TeacherWithUser) => {
-    setConfirmDialog({
-      isOpen: true,
-      type: 'delete',
-      uuid: teacher.uuid,
-      name: teacher.fullName,
-    });
-  };
-
-  const handleToggleActive = (teacher: TeacherWithUser) => {
-    setConfirmDialog({
-      isOpen: true,
-      type: 'toggle',
-      uuid: teacher.uuid,
-      name: teacher.firstName+' '+teacher.lastName,
-      isActive: teacher.isActive,
-    });
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setEditingTeacher(null);
   };
 
   const handleConfirmAction = async () => {
-    const { type, uuid, name, isActive } = confirmDialog;
+    const { type, teacher } = confirmDialog;
+    if (!teacher) return;
     try {
+      setIsSubmittingAction(true);
       startLoading();
       if (type === 'delete') {
-        await teacherService.remove(uuid!);
-        showSuccess('Professor excluído', `Professor ${name} foi removido`);
-      } else if (type === 'toggle') {
-        await teacherService.toggleStatus(uuid!, !isActive);
-        const newStatus = isActive ? 'desativado' : 'ativado';
-        showSuccess(`Professor ${newStatus}`, `Professor ${name} foi ${newStatus}`);
+        await teacherService.remove(teacher.uuid);
+        showSuccess('Professor excluído', `${teacher.fullName} foi removido.`);
+        if (detailsTeacher?.uuid === teacher.uuid) setDetailsTeacher(null);
+        setConfirmDialog({ isOpen: false, type: 'delete' });
+        await loadTeachers();
+      } else {
+        await teacherService.toggleStatus(teacher.uuid, !teacher.isActive);
+        const newStatus = teacher.isActive ? 'desativado' : 'ativado';
+        showSuccess(
+          `Professor ${newStatus}`,
+          teacher.user
+            ? `${teacher.fullName} foi ${newStatus}; o acesso ao sistema acompanha o estado.`
+            : `${teacher.fullName} foi ${newStatus}.`
+        );
+        setConfirmDialog({ isOpen: false, type: 'delete' });
+        await refresh();
       }
-      setConfirmDialog({ isOpen: false, type: 'delete' });
-      loadTeachers();
-    } catch (error: any) {
-      console.error('Erro:', error);
-      showError('Erro', error.response?.data?.message || 'Ocorreu um erro');
+    } catch (error) {
+      showError('Erro', getApiErrorMessage(error, 'Ocorreu um erro'));
     } finally {
+      setIsSubmittingAction(false);
       stopLoading();
     }
   };
 
-  const formatDate = (date: string) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
+  const renderActions = (teacher: TeacherWithUser, buttonClass: string) => (
+    <>
+      <button className={buttonClass} onClick={() => setDetailsTeacher(teacher)} title="Ver detalhes" aria-label={`Ver detalhes de ${teacher.fullName}`}>
+        <Eye size={16} className={styles.actionView} />
+      </button>
+      {canUpdate && (
+        <button
+          className={buttonClass}
+          onClick={() => setConfirmDialog({ isOpen: true, type: 'toggle', teacher })}
+          title={teacher.isActive ? 'Desativar' : 'Ativar'}
+          aria-label={teacher.isActive ? 'Desativar' : 'Ativar'}
+        >
+          {teacher.isActive ? <PowerOff size={16} className={styles.actionInactive} /> : <Power size={16} className={styles.actionActive} />}
+        </button>
+      )}
+      {canUpdate && (
+        <button className={buttonClass} onClick={() => handleEdit(teacher)} title="Editar" aria-label="Editar">
+          <Edit size={16} />
+        </button>
+      )}
+      {canDelete && (
+        <button className={buttonClass} onClick={() => setConfirmDialog({ isOpen: true, type: 'delete', teacher })} title="Excluir" aria-label="Excluir">
+          <Trash2 size={16} className={styles.actionDanger} />
+        </button>
+      )}
+    </>
+  );
 
   const columns = [
     {
@@ -212,7 +256,7 @@ export default function TeachersPage() {
     },
     {
       key: 'contact',
-      header: 'Contato',
+      header: 'Contacto',
       render: (item: TeacherWithUser) => (
         <div className={styles.contactCell}>
           {item.email && (
@@ -227,6 +271,7 @@ export default function TeachersPage() {
               <span>{item.phone}</span>
             </div>
           )}
+          {!item.email && !item.phone && <span className={styles.noUser}>-</span>}
         </div>
       ),
     },
@@ -242,204 +287,138 @@ export default function TeachersPage() {
     },
     {
       key: 'gender',
-      header: 'Gênero',
+      header: 'Género',
       render: (item: TeacherWithUser) => getGenderBadge(item.gender),
     },
     {
+      key: 'access',
+      header: 'Acesso',
+      render: (item: TeacherWithUser) => getAccessBadge(item),
+    },
+    {
       key: 'status',
-      header: 'Status',
+      header: 'Estado',
       render: (item: TeacherWithUser) => getStatusBadge(item.isActive),
     },
     {
       key: 'actions',
       header: 'Ações',
       align: 'right' as const,
-      render: (item: TeacherWithUser) => (
-        <div className={styles.actions}>
-          <button
-            className={styles.actionButton}
-            onClick={() => handleToggleActive(item)}
-            title={item.isActive ? 'Desativar' : 'Ativar'}
-          >
-            {item.isActive ? (
-              <PowerOff size={16} className={styles.actionInactive} />
-            ) : (
-              <Power size={16} className={styles.actionActive} />
-            )}
-          </button>
-          <button
-            className={styles.actionButton}
-            onClick={() => handleEdit(item)}
-            title="Editar"
-          >
-            <Edit size={16} />
-          </button>
-          <button
-            className={styles.actionButton}
-            onClick={() => handleDelete(item)}
-            title="Excluir"
-          >
-            <Trash2 size={16} className={styles.actionDanger} />
-          </button>
-        </div>
-      ),
+      render: (item: TeacherWithUser) => <div className={styles.actions}>{renderActions(item, styles.actionButton)}</div>,
     },
   ];
 
-  const EmptyState = () => (
+  const hasActiveFilters = !!debouncedSearch || filters.isActive !== undefined || !!filters.gender;
+
+  const renderEmptyState = () => (
     <div className={styles.emptyState}>
       <div className={styles.emptyIconWrapper}>
         <Users size={48} className={styles.emptyIcon} />
       </div>
       <h3 className={styles.emptyTitle}>Nenhum professor</h3>
       <p className={styles.emptySubtext}>
-        {searchTerm || filters.isActive !== undefined || filters.gender
-          ? 'Tente ajustar seus filtros para encontrar o que procura'
-          : 'Comece cadastrando um professor'}
+        {hasActiveFilters ? 'Tente ajustar os filtros para encontrar o que procura' : 'Comece por registar um professor'}
       </p>
-      <Button icon={<Plus size={18} />} onClick={handleCreate}>
-        Novo Professor
-      </Button>
+      {canCreate && !hasActiveFilters && (
+        <Button icon={<Plus size={18} />} onClick={handleCreate}>
+          Novo Professor
+        </Button>
+      )}
     </div>
   );
 
-  const renderCardsView = () => {
-    const items = Array.isArray(teachers) ? teachers : [];
-    if (items.length === 0) return <EmptyState />;
-
-    return (
-      <div className={styles.cardsGrid}>
-        {items.map((teacher) => (
-          <div key={teacher.uuid} className={styles.teacherCard}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardHeaderLeft}>
-                <div className={styles.teacherIconLarge}>
-                  <User size={20} />
-                </div>
-                <div>
-                  <h3 className={styles.itemName}>{teacher.fullName}</h3>
-                  <p className={styles.itemNumber}>
-                    <FileText size={12} />
-                    {teacher.teacherNumber}
-                  </p>
-                </div>
+  const renderCardsView = () => (
+    <div className={styles.cardsGrid}>
+      {teachers.map(teacher => (
+        <div key={teacher.uuid} className={styles.teacherCard}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardHeaderLeft}>
+              <div className={styles.teacherIconLarge}>
+                <User size={20} />
               </div>
-              <div className={styles.cardActions}>
-                <button
-                  className={styles.iconButton}
-                  onClick={() => handleToggleActive(teacher)}
-                  title={teacher.isActive ? 'Desativar' : 'Ativar'}
-                >
-                  {teacher.isActive ? (
-                    <PowerOff size={16} className={styles.actionInactive} />
+              <div>
+                <h3 className={styles.itemName}>{teacher.fullName}</h3>
+                <p className={styles.itemNumber}>
+                  <FileText size={12} />
+                  {teacher.teacherNumber}
+                </p>
+              </div>
+            </div>
+            <div className={styles.cardActions}>{renderActions(teacher, styles.iconButton)}</div>
+          </div>
+
+          <div className={styles.cardBody}>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Especialização</span>
+                <span className={styles.infoValue}>
+                  <Briefcase size={14} />
+                  {teacher.specialization || '-'}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Género</span>
+                {getGenderBadge(teacher.gender)}
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Email</span>
+                <span className={styles.infoValue}>
+                  <Mail size={14} />
+                  {teacher.email || '-'}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Telefone</span>
+                <span className={styles.infoValue}>
+                  <Phone size={14} />
+                  {teacher.phone || '-'}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Data de Contratação</span>
+                <span className={styles.infoValue}>
+                  <Calendar size={14} />
+                  {formatDisplayDate(teacher.hireDate)}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Utilizador</span>
+                <span className={styles.infoValue}>
+                  {teacher.user ? (
+                    <span className={styles.hasUser}>
+                      <CheckCircle size={14} />
+                      {teacher.user.username}
+                    </span>
                   ) : (
-                    <Power size={16} className={styles.actionActive} />
+                    <span className={styles.noUser}>Sem acesso</span>
                   )}
-                </button>
-                <button
-                  className={styles.iconButton}
-                  onClick={() => handleEdit(teacher)}
-                  title="Editar"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  className={styles.iconButton}
-                  onClick={() => handleDelete(teacher)}
-                  title="Excluir"
-                >
-                  <Trash2 size={16} className={styles.actionDanger} />
-                </button>
+                </span>
               </div>
-            </div>
-
-            <div className={styles.cardBody}>
-              <div className={styles.infoGrid}>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Especialização</span>
-                  <span className={styles.infoValue}>
-                    <Briefcase size={14} />
-                    {teacher.specialization || '-'}
-                  </span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Gênero</span>
-                  {getGenderBadge(teacher.gender)}
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Email</span>
-                  <span className={styles.infoValue}>
-                    <Mail size={14} />
-                    {teacher.email || '-'}
-                  </span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Telefone</span>
-                  <span className={styles.infoValue}>
-                    <Phone size={14} />
-                    {teacher.phone || '-'}
-                  </span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Data de Contratação</span>
-                  <span className={styles.infoValue}>
-                    <Calendar size={14} />
-                    {formatDate(teacher.hireDate)}
-                  </span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Usuário</span>
-                  <span className={styles.infoValue}>
-                    {teacher.user ? (
-                      <span className={styles.hasUser}>
-                        <CheckCircle size={14} />
-                        {teacher.user.username}
-                      </span>
-                    ) : (
-                      <span className={styles.noUser}>Sem usuário</span>
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.cardFooter}>
-              <div className={styles.cardTags}>
-                {getStatusBadge(teacher.isActive)}
-              </div>
-              <span className={styles.cardDate}>
-                <Clock size={12} />
-                Criado em {formatDate(teacher.createdAt)}
-              </span>
             </div>
           </div>
-        ))}
-      </div>
-    );
-  };
 
-  const renderTableView = () => {
-    const items = Array.isArray(teachers) ? teachers : [];
-    if (items.length === 0) return <EmptyState />;
+          <div className={styles.cardFooter}>
+            <div className={styles.cardTags}>
+              {getStatusBadge(teacher.isActive)}
+              {getAccessBadge(teacher)}
+            </div>
+            <span className={styles.cardDate}>
+              <Clock size={12} />
+              Registado em {formatDisplayDate(teacher.createdAt)}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
-    return (
-      <div className={styles.tableContainer}>
-        <Table
-          columns={columns}
-          data={items}
-          emptyMessage="Nenhum professor encontrado"
-        />
-      </div>
-    );
-  };
-
-  if (isLoading && teachers.length === 0) {
+  if (!loaded) {
     return (
       <div className={styles.page}>
         <div className={styles.header}>
           <div>
             <h1 className={styles.title}>Professores</h1>
-            <p className={styles.subtitle}>Carregando...</p>
+            <p className={styles.subtitle}>A carregar...</p>
           </div>
         </div>
         <div className={styles.toolbar}>
@@ -454,6 +433,8 @@ export default function TeachersPage() {
     );
   }
 
+  const confirmTeacher = confirmDialog.teacher;
+
   return (
     <div className={styles.page}>
       {/* Header */}
@@ -464,17 +445,17 @@ export default function TeachersPage() {
           </div>
           <div>
             <h1 className={styles.title}>Professores</h1>
-            <p className={styles.subtitle}>
-              Gerencie os professores da instituição
-            </p>
+            <p className={styles.subtitle}>Gerencie os professores da instituição</p>
           </div>
           <span className={styles.totalCount}>{total} professores</span>
         </div>
-        <div className={styles.headerActions}>
-          <Button icon={<Plus size={18} />} onClick={handleCreate} className={styles.createButton}>
-            Novo Professor
-          </Button>
-        </div>
+        {canCreate && (
+          <div className={styles.headerActions}>
+            <Button icon={<Plus size={18} />} onClick={handleCreate} className={styles.createButton}>
+              Novo Professor
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Toolbar */}
@@ -484,17 +465,14 @@ export default function TeachersPage() {
             <Search size={16} className={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Pesquisar professores..."
+              placeholder="Pesquisar por nome, nº, email ou especialização..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onChange={e => setSearchTerm(e.target.value)}
               className={styles.searchInput}
+              aria-label="Pesquisar professores"
             />
           </div>
-          <button
-            className={`${styles.filterButton} ${showFilters ? styles.active : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
-          >
+          <button className={`${styles.filterButton} ${showFilters ? styles.active : ''}`} onClick={() => setShowFilters(!showFilters)}>
             <Filter size={16} />
             Filtros
             {showFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -503,14 +481,14 @@ export default function TeachersPage() {
             <button
               className={`${styles.viewButton} ${viewMode === 'cards' ? styles.active : ''}`}
               onClick={() => setViewMode('cards')}
-              title="Visualização em Cards"
+              title="Visualização em cartões"
             >
               <LayoutGrid size={16} />
             </button>
             <button
               className={`${styles.viewButton} ${viewMode === 'table' ? styles.active : ''}`}
               onClick={() => setViewMode('table')}
-              title="Visualização em Tabela"
+              title="Visualização em tabela"
             >
               <List size={16} />
             </button>
@@ -528,50 +506,40 @@ export default function TeachersPage() {
       {showFilters && (
         <div className={styles.filtersPanel}>
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Gênero</label>
+            <label className={styles.filterLabel}>Género</label>
             <div className={styles.filterOptions}>
-              <button
-                className={`${styles.filterChip} ${filters.gender === undefined ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, gender: undefined })}
-              >
-                Todos
-              </button>
-              <button
-                className={`${styles.filterChip} ${filters.gender === 'MALE' ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, gender: 'MALE' })}
-              >
-                Masculino
-              </button>
-              <button
-                className={`${styles.filterChip} ${filters.gender === 'FEMALE' ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, gender: 'FEMALE' })}
-              >
-                Feminino
-              </button>
+              {[
+                { value: undefined, label: 'Todos' },
+                { value: 'MALE' as const, label: 'Masculino' },
+                { value: 'FEMALE' as const, label: 'Feminino' },
+              ].map(option => (
+                <button
+                  key={option.label}
+                  className={`${styles.filterChip} ${filters.gender === option.value ? styles.active : ''}`}
+                  onClick={() => updateFilters({ gender: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
 
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Status</label>
+            <label className={styles.filterLabel}>Estado</label>
             <div className={styles.filterOptions}>
-              <button
-                className={`${styles.filterChip} ${filters.isActive === undefined ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, isActive: undefined })}
-              >
-                Todos
-              </button>
-              <button
-                className={`${styles.filterChip} ${filters.isActive === true ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, isActive: true })}
-              >
-                Ativos
-              </button>
-              <button
-                className={`${styles.filterChip} ${filters.isActive === false ? styles.active : ''}`}
-                onClick={() => setFilters({ ...filters, isActive: false })}
-              >
-                Inativos
-              </button>
+              {[
+                { value: undefined, label: 'Todos' },
+                { value: true, label: 'Ativos' },
+                { value: false, label: 'Inativos' },
+              ].map(option => (
+                <button
+                  key={option.label}
+                  className={`${styles.filterChip} ${filters.isActive === option.value ? styles.active : ''}`}
+                  onClick={() => updateFilters({ isActive: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -579,7 +547,27 @@ export default function TeachersPage() {
 
       {/* Content */}
       <div className={styles.content}>
-        {viewMode === 'cards' ? renderCardsView() : renderTableView()}
+        {teachers.length === 0 ? (
+          renderEmptyState()
+        ) : viewMode === 'cards' ? (
+          renderCardsView()
+        ) : (
+          <div className={styles.tableContainer}>
+            <Table columns={columns} data={teachers} emptyMessage="Nenhum professor encontrado" />
+          </div>
+        )}
+        {total > 0 && (
+          <Pagination
+            page={filters.page || 1}
+            totalPages={totalPages}
+            total={total}
+            limit={filters.limit || 10}
+            onPageChange={page => setFilters(prev => ({ ...prev, page }))}
+            onLimitChange={limit => updateFilters({ limit })}
+            itemLabel="professores"
+            disabled={isLoading}
+          />
+        )}
       </div>
 
       {/* Confirm Dialog */}
@@ -590,48 +578,51 @@ export default function TeachersPage() {
         title={
           confirmDialog.type === 'delete'
             ? 'Excluir Professor'
-            : confirmDialog.isActive
-            ? 'Desativar Professor'
-            : 'Ativar Professor'
+            : confirmTeacher?.isActive
+              ? 'Desativar Professor'
+              : 'Ativar Professor'
         }
         message={
           confirmDialog.type === 'delete'
-            ? `Tem certeza que deseja excluir o professor "${confirmDialog.name}"?`
-            : confirmDialog.isActive
-            ? `Tem certeza que deseja desativar o professor "${confirmDialog.name}"?`
-            : `Tem certeza que deseja ativar o professor "${confirmDialog.name}"?`
+            ? `Tem a certeza que deseja excluir o professor "${confirmTeacher?.fullName}"? O acesso ao sistema também deixa de funcionar.`
+            : confirmTeacher?.isActive
+              ? `Tem a certeza que deseja desativar o professor "${confirmTeacher?.fullName}"?${confirmTeacher?.user ? ' O acesso ao sistema também fica desativado.' : ''}`
+              : `Tem a certeza que deseja ativar o professor "${confirmTeacher?.fullName}"?${confirmTeacher?.user ? ' O acesso ao sistema volta a ficar ativo.' : ''}`
         }
         type={confirmDialog.type === 'delete' ? 'danger' : 'warning'}
-        confirmText={
-          confirmDialog.type === 'delete'
-            ? 'Excluir'
-            : confirmDialog.isActive
-            ? 'Desativar'
-            : 'Ativar'
-        }
-        isLoading={isLoading}
+        confirmText={confirmDialog.type === 'delete' ? 'Excluir' : confirmTeacher?.isActive ? 'Desativar' : 'Ativar'}
+        isLoading={isSubmittingAction}
       />
 
-      {/* Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={selectedTeacher ? 'Editar Professor' : 'Novo Professor'}
-        size="lg"
-      >
-        <TeacherForm
-          teacher={selectedTeacher}
-          onSuccess={() => {
-            setIsModalOpen(false);
-            setSelectedTeacher(null);
-            loadTeachers();
-          }}
-          onCancel={() => {
-            setIsModalOpen(false);
-            setSelectedTeacher(null);
-          }}
-        />
+      {/* Formulário */}
+      <Modal isOpen={isFormOpen} onClose={closeForm} title={editingTeacher ? 'Editar Professor' : 'Novo Professor'} size="lg">
+        {isFormOpen && (
+          <TeacherForm
+            key={editingTeacher?.uuid ?? 'new'}
+            teacher={editingTeacher}
+            onSuccess={() => {
+              closeForm();
+              refresh();
+            }}
+            onCancel={closeForm}
+          />
+        )}
       </Modal>
+
+      {/* Detalhes */}
+      <TeacherDetails
+        teacher={detailsTeacher}
+        isOpen={!!detailsTeacher && !isFormOpen}
+        onClose={() => setDetailsTeacher(null)}
+        canManageAccess={canUpdate}
+        canReadAssignments={canReadAssignments}
+        onAccessChanged={refresh}
+        onEdit={canUpdate && detailsTeacher ? () => handleEdit(detailsTeacher) : undefined}
+        onToggleStatus={
+          canUpdate && detailsTeacher ? () => setConfirmDialog({ isOpen: true, type: 'toggle', teacher: detailsTeacher }) : undefined
+        }
+        onDelete={canDelete && detailsTeacher ? () => setConfirmDialog({ isOpen: true, type: 'delete', teacher: detailsTeacher }) : undefined}
+      />
     </div>
   );
 }

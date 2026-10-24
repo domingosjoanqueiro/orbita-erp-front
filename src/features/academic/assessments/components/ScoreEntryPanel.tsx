@@ -241,6 +241,8 @@ export const ScoreEntryPanel: React.FC = () => {
                 scores,
             });
             showSuccess('Notas guardadas', `${result.saved} nova(s), ${result.updated} atualizada(s).`);
+            // o contexto traz as notas em falta por período (condição para submeter)
+            await loadContext(assignmentUuid, true);
             await loadGrid();
         } catch (error) {
             showError('Erro', getApiErrorMessage(error, 'Não foi possível guardar as notas'));
@@ -303,6 +305,8 @@ export const ScoreEntryPanel: React.FC = () => {
         canSubmit
         && !!currentPeriod
         && (!currentPeriod.status || currentPeriod.status === 'DRAFT' || currentPeriod.status === 'RETURNED');
+    // Só se submete com todas as avaliações do período lançadas para todos os alunos
+    const missingInPeriod = currentPeriod?.missingScores ?? 0;
 
     return (
         <>
@@ -530,7 +534,9 @@ export const ScoreEntryPanel: React.FC = () => {
                                 <span className={styles.hint}>
                                     {isDirty
                                         ? 'Tem alterações por guardar.'
-                                        : 'Linhas sem nota não são enviadas; na média contam como 0.'}
+                                        : canSubmitPeriod && missingInPeriod > 0
+                                            ? `Faltam ${missingInPeriod} nota(s) em ${currentPeriod.displayName} (todas as avaliações). Lance-as para poder submeter.`
+                                            : 'Todas as avaliações do período têm de ter nota para todos os alunos antes de submeter.'}
                                 </span>
                                 <div className={styles.actionsGroup}>
                                     {editable && (
@@ -548,8 +554,14 @@ export const ScoreEntryPanel: React.FC = () => {
                                             variant="success"
                                             icon={<Send size={16} />}
                                             onClick={() => setConfirmSubmit(true)}
-                                            disabled={isBusy || isDirty}
-                                            title={isDirty ? 'Guarde as alterações antes de submeter' : undefined}
+                                            disabled={isBusy || isDirty || missingInPeriod > 0}
+                                            title={
+                                                isDirty
+                                                    ? 'Guarde as alterações antes de submeter'
+                                                    : missingInPeriod > 0
+                                                        ? `Faltam ${missingInPeriod} nota(s) neste período`
+                                                        : undefined
+                                            }
                                         >
                                             Submeter período
                                         </Button>
@@ -586,8 +598,8 @@ export const ScoreEntryPanel: React.FC = () => {
                 title="Submeter notas do período"
                 message={
                     context?.workflow === 'DIRECT'
-                        ? `As notas de ${currentPeriod?.displayName ?? 'este período'} (todas as avaliações) serão publicadas e a pauta será fechada. As notas em falta contam como 0. Continuar?`
-                        : `As notas de ${currentPeriod?.displayName ?? 'este período'} (todas as avaliações) serão enviadas à coordenação e deixarão de poder ser editadas. As notas em falta contam como 0. Continuar?`
+                        ? `As notas de ${currentPeriod?.displayName ?? 'este período'} (todas as avaliações) serão publicadas e a pauta será fechada. Continuar?`
+                        : `As notas de ${currentPeriod?.displayName ?? 'este período'} (todas as avaliações) serão enviadas à coordenação e deixarão de poder ser editadas. Continuar?`
                 }
                 type="warning"
                 confirmText="Submeter"

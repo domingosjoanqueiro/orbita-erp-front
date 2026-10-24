@@ -4,11 +4,9 @@ export type Gender =
     | 'MALE'
     | 'FEMALE';
 
-export type DocumentType =
-    | 'BI'
-    | 'PASSPORT'
-    | 'DIRE'
-    | 'NUIT';
+import type { SystemAccess } from '@/features/academic/shared/components/SystemAccessSection';
+export type { DocumentType } from '@/shared/constants/document-types';
+import type { DocumentType } from '@/shared/constants/document-types';
 
 export type StudentStatus =
     | 'ACTIVE'
@@ -298,20 +296,8 @@ export interface StudentFilters {
 export interface StudentWithUser
     extends Student {
 
-    user?: {
-
-        id: number;
-
-        uuid: string;
-
-        email: string;
-
-        username: string;
-
-        isActive: boolean;
-        createdAt: string;
-
-    };
+    // acesso ao portal (null se ainda não foi criado)
+    user?: SystemAccess | null;
 
 }
 

@@ -1,0 +1,281 @@
+/* Página de horários e diálogos */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.nativeSelect,
+.input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+}
+
+.nativeSelect:focus,
+.input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sideCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sideTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workloadRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workloadHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.workloadName {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workloadCount {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.workloadTeacher {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.barDone {
+  background: var(--success);
+}
+
+.barOver {
+  background: var(--warning);
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.when {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.optionList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.option {
+  text-align: left;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.option:hover:not(:disabled) {
+  border-color: var(--primary-light);
+  background: var(--bg-hover);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.optionSelected {
+  border-color: var(--primary);
+  background: var(--bg-active);
+}
+
+.option:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.optionTitle {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.optionMeta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.optionWarn {
+  font-size: 12px;
+  color: var(--error);
+  font-weight: 600;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+}
+
+.dialogActionsRight {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fullRow {
+  grid-column: 1 / -1;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--error);
+}
+
+.printOnly {
+  display: none;
+}
+
+@media print {
+  .noPrint {
+    display: none !important;
+  }
+
+  .printOnly {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

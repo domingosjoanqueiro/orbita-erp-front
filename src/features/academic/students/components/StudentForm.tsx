@@ -3,6 +3,9 @@
 'use client';
 
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { DOCUMENT_TYPE_OPTIONS } from '@/shared/constants/document-types';
+import { toDateInputValue } from '@/shared/utils/date.utils';
+import { getApiErrorMessage, getApiFieldErrors } from '@/shared/utils/api.utils';
 import { useForm } from 'react-hook-form';
 import {
     User,
@@ -142,13 +145,6 @@ const STUDENT_STATUS_OPTIONS = [
     { value: 'SUSPENDED', label: 'Suspenso' },
 ];
 
-const DOCUMENT_TYPE_OPTIONS = [
-    { value: '', label: 'Selecione...' },
-    { value: 'BI', label: 'Bilhete de Identidade' },
-    { value: 'PASSPORT', label: 'Passaporte' },
-    { value: 'DIRE', label: 'DIRE' },
-    { value: 'NUIT', label: 'NUIT' },
-];
 
 // ✅ Opções para Províncias de Moçambique
 const PROVINCE_OPTIONS = [
@@ -354,7 +350,7 @@ export const StudentForm = forwardRef<{ getData: () => StudentFormData | null },
             middleName: student?.middleName || null,
             lastName: student?.lastName || '',
             gender: student?.gender || 'MALE',
-            birthDate: student?.birthDate ? new Date(student.birthDate).toISOString().split('T')[0] : '',
+            birthDate: toDateInputValue(student?.birthDate),
             birthPlace: student?.birthPlace || null,
             nationality: student?.nationality || null,
             province: student?.province || null,
@@ -369,7 +365,7 @@ export const StudentForm = forwardRef<{ getData: () => StudentFormData | null },
             guardianName: student?.guardianName || null,
             guardianPhone: student?.guardianPhone || null,
             guardianRelationship: student?.guardianRelationship || null,
-            admissionDate: student?.admissionDate ? new Date(student.admissionDate).toISOString().split('T')[0] : '',
+            admissionDate: toDateInputValue(student?.admissionDate),
             studentStatus: student?.studentStatus || 'ACTIVE',
             remarks: student?.remarks || null,
             isActive: true,
@@ -541,7 +537,7 @@ export const StudentForm = forwardRef<{ getData: () => StudentFormData | null },
                 address: data.address || null,
                 phone: data.phone || null,
                 email: data.email || null,
-                documentType: documentTypeValue,
+                documentType: documentTypeValue || null,
                 documentNumber: data.documentNumber || null,
                 fatherFullName: data.fatherFullName || null,
                 motherFullName: data.motherFullName || null,
@@ -574,15 +570,15 @@ export const StudentForm = forwardRef<{ getData: () => StudentFormData | null },
                 onSuccess();
             }
         } catch (error: any) {
-            console.error('Erro ao salvar estudante:', error);
-            let errorMessage = 'Erro ao salvar estudante. Tente novamente.';
-            if (error.response?.data?.message) {
-                errorMessage = error.response.data.message;
-            } else if (error.response?.data?.errors) {
-                const messages = Object.values(error.response.data.errors).flat();
-                errorMessage = messages.join(', ');
-            }
-            showError('Erro', errorMessage);
+            // mostra o primeiro erro de campo devolvido pela API (ex.: email inválido)
+            const apiFieldErrors = getApiFieldErrors(error);
+            const firstField = Object.keys(apiFieldErrors)[0];
+            showError(
+                firstField ? 'Verifique os campos' : 'Erro',
+                firstField
+                    ? `${firstField}: ${apiFieldErrors[firstField]}`
+                    : getApiErrorMessage(error, 'Erro ao guardar o estudante. Tente novamente.')
+            );
         } finally {
             setIsSubmitting(false);
             stopLoading();

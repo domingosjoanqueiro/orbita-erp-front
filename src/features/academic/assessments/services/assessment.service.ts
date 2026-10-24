@@ -18,6 +18,7 @@ import type {
     SaveScoresResponse,
     SubmitPeriodResponse,
     TeacherAssignmentOption,
+    TeacherAcademicYear,
     ClassOption,
     EnrolledStudentOption,
     StudentOption,
@@ -34,15 +35,24 @@ class AssessmentService extends ApiService {
      * Atribuições disponíveis para trabalhar.
      * Professor: só as suas (portal do professor); restantes: todas as ativas.
      */
-    async getTeacherAssignments(mine = false, search?: string): Promise<TeacherAssignmentOption[]> {
+    async getTeacherAssignments(mine = false, search?: string, academicYearUuid?: string): Promise<TeacherAssignmentOption[]> {
         if (mine) {
-            const response = await this.get<unknown>('/teacher-portal/assignments');
+            // Sem ano indicado, a API devolve o ano letivo corrente do professor
+            const response = await this.get<unknown>('/teacher-portal/assignments', {
+                params: { academicYearUuid: academicYearUuid || undefined },
+            });
             return extractApiList<TeacherAssignmentOption>(response).data;
         }
         const response = await this.get<unknown>('/teacher-assignments', {
             params: { limit: 100, isActive: true, search: search || undefined },
         });
         return extractApiList<TeacherAssignmentOption>(response).data;
+    }
+
+    // Anos letivos em que o professor autenticado tem atribuições
+    async getTeacherAcademicYears(): Promise<TeacherAcademicYear[]> {
+        const response = await this.get<unknown>('/teacher-portal/academic-years');
+        return extractApiList<TeacherAcademicYear>(response).data;
     }
 
     // Alunos de uma turma onde o professor autenticado leciona

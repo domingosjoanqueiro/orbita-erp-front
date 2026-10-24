@@ -957,3 +957,10 @@
 .teacherCard:nth-child(6) {
   animation-delay: 0.22s;
 }
+.actionView {
+  color: var(--primary);
+}
+
+.actionView:hover {
+  color: var(--primary-hover);
+}

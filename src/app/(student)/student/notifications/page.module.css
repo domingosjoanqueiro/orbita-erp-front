@@ -1,0 +1,64 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.markAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: var(--sp-accent);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.item {
+  align-items: flex-start;
+}
+
+.unread {
+  background: color-mix(in srgb, var(--sp-accent-soft) 55%, transparent);
+}
+
+.title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sp-text);
+}
+
+.message {
+  font-size: 0.8125rem;
+  color: var(--sp-text-2);
+  line-height: 1.4;
+}
+
+.time {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--sp-text-3);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--sp-accent);
+  flex-shrink: 0;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

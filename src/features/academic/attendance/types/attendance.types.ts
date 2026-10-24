@@ -29,6 +29,8 @@ export interface AttendanceSheet {
         endDate: string | null;
     };
     attendanceDate: string;
+    // feriado / dia sem aulas no calendário escolar
+    dayOff?: { uuid: string; title: string; event_type: string } | null;
     isRecorded: boolean;
     students: AttendanceSheetStudent[];
 }

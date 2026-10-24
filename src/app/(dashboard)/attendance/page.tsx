@@ -288,6 +288,12 @@ export default function AttendancePage() {
                                 <h2 className={styles.panelTitle} style={{ margin: 0 }}>
                                     {sheet.teacherAssignment.subjectName} — Turma {sheet.teacherAssignment.className}
                                 </h2>
+                                {sheet.dayOff && (
+                                    <span className={`${styles.banner} ${styles.bannerWarning}`} style={{ margin: 0, padding: '4px 12px' }}>
+                                        <AlertTriangle size={16} />
+                                        Sem aulas: {sheet.dayOff.title}
+                                    </span>
+                                )}
                                 <span className={`${styles.banner} ${sheet.isRecorded ? styles.bannerSuccess : styles.bannerWarning}`} style={{ margin: 0, padding: '4px 12px' }}>
                                     {sheet.isRecorded ? <ShieldCheck size={16} /> : <Clock size={16} />}
                                     {sheet.isRecorded ? 'Chamada registada' : 'Chamada por registar'}
@@ -344,7 +350,7 @@ export default function AttendancePage() {
                                                                             aria-checked={row.status === status}
                                                                             title={ATTENDANCE_STATUS_LABELS[status]}
                                                                             className={`${styles.segButton} ${STATUS_BUTTON[status].className} ${row.status === status ? styles.active : ''}`}
-                                                                            disabled={!canRecord || isSaving}
+                                                                            disabled={!canRecord || isSaving || !!sheet?.dayOff}
                                                                             onClick={() => setStatus(student.studentUuid, status)}
                                                                         >
                                                                             {STATUS_BUTTON[status].short}
@@ -358,7 +364,7 @@ export default function AttendancePage() {
                                                                     value={row.remarks}
                                                                     maxLength={1000}
                                                                     placeholder="Opcional"
-                                                                    disabled={!canRecord || isSaving}
+                                                                    disabled={!canRecord || isSaving || !!sheet?.dayOff}
                                                                     aria-label={`Observações de ${student.studentName}`}
                                                                     onChange={e =>
                                                                         setDraft(prev => ({
@@ -385,11 +391,11 @@ export default function AttendancePage() {
                                                     variant="secondary"
                                                     icon={<CheckCheck size={16} />}
                                                     onClick={markAllPresent}
-                                                    disabled={isSaving || summary.missing === 0}
+                                                    disabled={isSaving || summary.missing === 0 || !!sheet?.dayOff}
                                                 >
                                                     Restantes presentes
                                                 </Button>
-                                                <Button icon={<Save size={16} />} onClick={handleSave} isLoading={isSaving} disabled={isSaving || !isDirty}>
+                                                <Button icon={<Save size={16} />} onClick={handleSave} isLoading={isSaving} disabled={isSaving || !isDirty || !!sheet?.dayOff}>
                                                     Guardar presenças
                                                 </Button>
                                             </div>

@@ -77,6 +77,11 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
   const isCompany = isCompanyAuth;
   const currentUser = isPlatform ? platformUser : propUser;
 
+  // Notificações reais (só no painel da empresa; null no painel da plataforma).
+  // Chamado antes do return antecipado para manter a ordem dos hooks
+  const notifications = useNotifications();
+  const unreadCount = notifications?.unreadCount ?? 0;
+
   // Se não estiver autenticado em nenhum dos dois, não renderizar nada
   if (!isPlatform && !isCompany) {
     return null;
@@ -113,9 +118,6 @@ export const Header: React.FC<HeaderProps> = ({ user: propUser, onMenuClick }) =
     }
   };
 
-  // Notificações reais (só no painel da empresa; null no painel da plataforma)
-  const notifications = useNotifications();
-  const unreadCount = notifications?.unreadCount ?? 0;
 
   const openNotification = async (uuid: string, link: string | null, isRead: boolean) => {
     setIsNotificationsOpen(false);

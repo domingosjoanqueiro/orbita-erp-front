@@ -1,31 +1,34 @@
 // src/features/academic/teachers/types/teacher.types.ts
 
 export type Gender = 'MALE' | 'FEMALE';
-export type DocumentType = 'BI' | 'PASSPORT' | 'DIRE' | 'NUIT';
+import type { SystemAccess } from '@/features/academic/shared/components/SystemAccessSection';
+export type { DocumentType } from '@/shared/constants/document-types';
+import type { DocumentType } from '@/shared/constants/document-types';
 
 export interface Teacher {
   id: number;
   uuid: string;
-  companyId: number;
-  userId?: number;
+  userId?: number | null;
   teacherNumber: string;
   firstName: string;
   middleName?: string | null;
   lastName: string;
   fullName: string;
   gender: Gender;
+  // "YYYY-MM-DD"
   birthDate: string;
   phone?: string | null;
   email?: string | null;
   documentType?: DocumentType | null;
   documentNumber?: string | null;
+  // "YYYY-MM-DD"
   hireDate: string;
-  specialization: string;
+  specialization?: string | null;
   address?: string | null;
   isActive: boolean;
+  user?: SystemAccess | null;
   createdAt: string;
   updatedAt: string;
-  deletedAt?: string | null;
 }
 
 export interface CreateTeacherRequest {
@@ -68,21 +71,16 @@ export interface TeacherFilters {
   limit?: number;
 }
 
-export interface TeacherWithUser extends Teacher {
-  user?: {
-    id: number;
-    uuid: string;
-    email: string;
-    username: string;
-    isActive: boolean;
-  };
-}
+// A API devolve o acesso (user) em todas as respostas
+export type TeacherWithUser = Teacher;
 
 export interface TeacherCredentials {
+  userId: number;
   username: string;
   temporaryPassword: string;
 }
 
 export interface TeacherResponseWithCredentials extends Teacher {
-  credentials?: TeacherCredentials;
+  // credenciais do acesso criado com o professor (null se ficou inativo)
+  portal?: TeacherCredentials | null;
 }

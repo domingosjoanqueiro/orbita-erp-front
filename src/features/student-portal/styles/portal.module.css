@@ -1,0 +1,499 @@
+/* Estilos partilhados das páginas do portal do aluno.
+   Os tokens (--sp-*, --tone-*) são definidos em StudentShell.module.css. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: enter 0.28s ease both;
+}
+
+@keyframes enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page { animation: none; }
+}
+
+/* ---------- Secções ---------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--sp-text);
+}
+
+.sectionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sp-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--sp-text-2);
+  font-size: 0.8125rem;
+}
+
+/* ---------- Cartões ---------- */
+
+.card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 20px;
+  box-shadow: var(--sp-shadow);
+}
+
+.cardPadded {
+  padding: 16px;
+}
+
+/* Cartão de destaque com gradiente */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--sp-gradient);
+  color: #FFFFFF;
+  box-shadow: 0 14px 32px rgba(79, 70, 229, 0.28);
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -60px;
+  top: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  right: 40px;
+  bottom: -90px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+}
+
+.heroEyebrow {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.heroTitle {
+  margin-top: 2px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.heroChips {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.heroChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- Métricas ---------- */
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  box-shadow: var(--sp-shadow);
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.statIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.statValue {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--sp-text-2);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+/* ---------- Listas ---------- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.listItem + .listItem {
+  border-top: 1px solid var(--sp-border);
+}
+
+button.listItem,
+a.listItem {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+button.listItem:active,
+a.listItem:active {
+  background: var(--sp-surface-2);
+}
+
+.listIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.listBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.listTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--sp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listSubtitle {
+  font-size: 0.8125rem;
+  color: var(--sp-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listTrailing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ---------- Chips / filtros (deslizáveis na horizontal) ---------- */
+
+.chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--sp-border);
+  border-radius: 999px;
+  background: var(--sp-surface);
+  color: var(--sp-text-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.chipActive {
+  background: var(--sp-text);
+  border-color: var(--sp-text);
+  color: var(--sp-surface);
+}
+
+.chipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tone-excellent);
+}
+
+/* ---------- Etiquetas de estado ---------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.tone-excellent { color: var(--tone-excellent); background: var(--tone-excellent-soft); }
+.tone-good { color: var(--tone-good); background: var(--tone-good-soft); }
+.tone-warning { color: var(--tone-warning); background: var(--tone-warning-soft); }
+.tone-danger { color: var(--tone-danger); background: var(--tone-danger-soft); }
+.tone-neutral { color: var(--tone-neutral); background: var(--tone-neutral-soft); }
+.tone-accent { color: var(--sp-accent); background: var(--sp-accent-soft); }
+
+/* ---------- Barras de progresso ---------- */
+
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sp-surface-2);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  transition: width 0.5s ease;
+}
+
+/* ---------- Anel de pontuação ---------- */
+
+.ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ring svg {
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  stroke: var(--sp-surface-2);
+}
+
+.ringValue {
+  stroke: currentColor;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.ringLabel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: var(--sp-text);
+}
+
+.ringLabel strong {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ringLabel span {
+  margin-top: 3px;
+  font-size: 0.625rem;
+  color: var(--sp-text-3);
+  font-weight: 600;
+}
+
+/* ---------- Estado vazio / erro ---------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--sp-accent-soft);
+  color: var(--sp-accent);
+  margin-bottom: 4px;
+}
+
+.emptyTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.emptyText {
+  max-width: 320px;
+  font-size: 0.8125rem;
+  color: var(--sp-text-2);
+  line-height: 1.45;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 14px;
+  background: var(--sp-accent);
+  color: #FFFFFF;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.buttonGhost {
+  background: var(--sp-accent-soft);
+  color: var(--sp-accent);
+}
+
+.buttonDanger {
+  background: var(--tone-danger-soft);
+  color: var(--tone-danger);
+}
+
+.buttonBlock {
+  width: 100%;
+}
+
+/* ---------- Esqueletos de carregamento ---------- */
+
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--sp-surface-2) 25%, var(--sp-border) 37%, var(--sp-surface-2) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ---------- Grelha de dois painéis (ecrãs largos) ---------- */
+
+.twoCol {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .twoCol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}

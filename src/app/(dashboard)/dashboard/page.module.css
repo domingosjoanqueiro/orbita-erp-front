@@ -293,6 +293,9 @@
 }
 
 .quickAction {
+  position: relative;
+  text-decoration: none;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);

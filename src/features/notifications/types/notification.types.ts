@@ -6,7 +6,11 @@ export type NotificationType =
     | 'ASSESSMENT_VALIDATED'
     | 'ASSESSMENT_RETURNED'
     | 'ASSESSMENT_PUBLISHED'
-    | 'TEACHER_ASSIGNED';
+    | 'TEACHER_ASSIGNED'
+    | 'GRADES_AVAILABLE'
+    | 'PAYMENT_RECEIVED'
+    | 'LEAVE_REQUESTED'
+    | 'LEAVE_DECIDED';
 
 export interface AppNotification {
     uuid: string;

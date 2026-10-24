@@ -1,0 +1,243 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.monthHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.monthTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.navButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.iconButton {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--bg-hover);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.weekday {
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  text-align: center;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.day {
+  min-height: 104px;
+  padding: 6px;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  background: var(--bg-primary);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.day:nth-child(7n) {
+  border-right: none;
+}
+
+button.day {
+  cursor: pointer;
+}
+
+button.day:hover {
+  background: var(--bg-hover);
+}
+
+.outside {
+  background: var(--bg-secondary);
+  opacity: 0.6;
+}
+
+.dayOff {
+  background: repeating-linear-gradient(135deg, transparent, transparent 6px, rgba(220, 38, 38, 0.06) 6px, rgba(220, 38, 38, 0.06) 12px);
+}
+
+.dayNumber {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.today .dayNumber {
+  background: var(--primary);
+  color: #fff;
+}
+
+.chip {
+  display: block;
+  width: 100%;
+  border: none;
+  border-left: 3px solid var(--tone);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.chip:hover {
+  background: var(--bg-hover);
+}
+
+.more {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--tone);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+button.item {
+  cursor: pointer;
+}
+
+button.item:hover {
+  background: var(--bg-hover);
+}
+
+.itemDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.itemDay {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.itemMonth {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.itemTitle {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.itemMeta {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+@media (max-width: 720px) {
+  .day {
+    min-height: 64px;
+  }
+
+  .chip {
+    font-size: 0;
+    height: 6px;
+    padding: 0;
+    border-left-width: 0;
+    background: var(--tone);
+  }
+}

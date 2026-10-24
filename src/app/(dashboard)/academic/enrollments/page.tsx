@@ -136,6 +136,14 @@ export default function EnrollmentsPage() {
     setIsModalOpen(true);
   };
 
+  // Ações rápidas do painel: /...?new=1 abre logo o formulário
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      window.history.replaceState(null, '', window.location.pathname);
+      handleCreate();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleEdit = (enrollment: Enrollment) => {
     setEditingEnrollment(enrollment);
     setIsEditing(true);

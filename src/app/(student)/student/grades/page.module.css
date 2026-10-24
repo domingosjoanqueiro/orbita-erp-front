@@ -1,0 +1,163 @@
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px;
+  transition: opacity 0.2s ease;
+}
+
+.summaryStats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.summaryStats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summaryValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--sp-text);
+}
+
+.summaryValue small {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sp-text-3);
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--tone-warning-soft);
+  color: var(--tone-warning);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.notice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.subject {
+  overflow: hidden;
+}
+
+.subjectHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.subjectHeader:disabled {
+  cursor: default;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--sp-text-3);
+  transition: transform 0.2s ease;
+}
+
+.subjectOpen .chevron {
+  transform: rotate(180deg);
+}
+
+.subjectBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--sp-border);
+  padding-top: 14px;
+  animation: reveal 0.2s ease both;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.assessment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assessmentRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.assessmentName {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.weight {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--sp-surface-2);
+  color: var(--sp-text-2);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.assessmentScore {
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.footnote {
+  font-size: 0.75rem;
+  color: var(--sp-text-3);
+}
+
+.legend {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--sp-text-3);
+}
+
+@media (max-width: 360px) {
+  .summary {
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .summaryValue {
+    font-size: 1.25rem;
+  }
+}

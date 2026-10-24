@@ -20,7 +20,7 @@ import { useAuth } from '@/shared/contexts/AuthContext';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { getApiErrorMessage } from '@/shared/utils/api.utils';
 import { assessmentService } from '@/features/academic/assessments/services/assessment.service';
-import type { EnrolledStudentOption, TeacherAssignmentOption } from '@/features/academic/assessments/types/assessment.types';
+import type { EnrolledStudentOption, TeacherAcademicYear, TeacherAssignmentOption } from '@/features/academic/assessments/types/assessment.types';
 import styles from './page.module.css';
 
 interface ClassGroup {
@@ -64,18 +64,28 @@ export default function MyClassesPage() {
     const [students, setStudents] = useState<RosterStudent[]>([]);
     const [isLoadingStudents, setIsLoadingStudents] = useState(false);
     const [search, setSearch] = useState('');
+    const [years, setYears] = useState<TeacherAcademicYear[]>([]);
+    // '' = ano letivo corrente (decidido pela API)
+    const [yearUuid, setYearUuid] = useState('');
+
+    useEffect(() => {
+        if (!isTeacher) return;
+        assessmentService.getTeacherAcademicYears().then(setYears).catch(() => setYears([]));
+    }, [isTeacher]);
 
     useEffect(() => {
         if (!isTeacher) {
             setIsLoading(false);
             return;
         }
+        setIsLoading(true);
+        setOpenClass(null);
         assessmentService
-            .getTeacherAssignments(true)
+            .getTeacherAssignments(true, undefined, yearUuid)
             .then(setAssignments)
             .catch(err => showError('Erro', getApiErrorMessage(err, 'Não foi possível carregar as suas turmas')))
             .finally(() => setIsLoading(false));
-    }, [isTeacher]);
+    }, [isTeacher, yearUuid]);
 
     // Uma turma pode ter várias disciplinas do mesmo professor
     const classes = useMemo<ClassGroup[]>(() => {
@@ -167,6 +177,19 @@ export default function MyClassesPage() {
                     </div>
                 )}
             </section>
+
+            {isTeacher && years.length > 1 && (
+                <label className={styles.yearBar}>
+                    <span>Ano letivo</span>
+                    <select value={yearUuid} onChange={event => setYearUuid(event.target.value)}>
+                        {years.map(year => (
+                            <option key={year.uuid} value={year.isCurrent ? '' : year.uuid}>
+                                {year.name}{year.isCurrent ? ' (atual)' : ''} · {year.assignmentsCount} atribuição(ões)
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            )}
 
             {!isTeacher && (
                 <div className={styles.notice}>

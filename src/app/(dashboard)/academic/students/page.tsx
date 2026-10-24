@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Users,
     Plus,
@@ -25,13 +25,9 @@ import {
     GraduationCap,
     Calendar,
     FileText,
-    Heart,
-    Globe,
-    MapPin,
     Eye,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button/Button';
-import { Input } from '@/shared/components/ui/Input/Input';
 import { Badge } from '@/shared/components/ui/Badge/Badge';
 import { Table } from '@/shared/components/ui/Table/Table';
 import { Modal } from '@/shared/components/ui/Modal/Modal';
@@ -40,6 +36,11 @@ import { SkeletonCard } from '@/shared/components/ui/Skeleton/SkeletonCard';
 import { Select } from '@/shared/components/ui/Select/Select';
 import { useLoading } from '@/shared/contexts/LoadingContext';
 import { useToast } from '@/shared/contexts/ToastContext';
+import { Pagination } from '@/shared/components/ui/Pagination/Pagination';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+import { usePermission } from '@/shared/hooks/usePermission';
+import { getApiErrorMessage } from '@/shared/utils/api.utils';
+import { formatDisplayDate } from '@/shared/utils/date.utils';
 import { studentService } from '@/features/academic/students/services/student.service';
 import { StudentForm } from '@/features/academic/students/components/StudentForm';
 import { StudentDetails } from '@/features/academic/students/components/StudentDetails';
@@ -86,139 +87,172 @@ const getGenderBadge = (gender: string) => {
 export default function StudentsPage() {
     const { startLoading, stopLoading, isLoading } = useLoading();
     const { showSuccess, showError } = useToast();
+    const { hasPermission } = usePermission();
+    const canCreate = hasPermission('students.create');
+    const canUpdate = hasPermission('students.update');
+    const canDelete = hasPermission('students.delete');
 
     const [students, setStudents] = useState<StudentWithUser[]>([]);
     const [classes, setClasses] = useState<{ uuid: string; name: string; code: string; gradeName: string }[]>([]);
     const [total, setTotal] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loaded, setLoaded] = useState(false);
     const [filters, setFilters] = useState<StudentFilters>({
         page: 1,
         limit: 10,
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-    const [selectedStudent, setSelectedStudent] = useState<StudentWithUser | null>(null);
+    const [editingStudent, setEditingStudent] = useState<StudentWithUser | null>(null);
+    const [detailsStudent, setDetailsStudent] = useState<StudentWithUser | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearch = useDebounce(searchTerm.trim(), 400);
     const [showFilters, setShowFilters] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('table');
+    const [isSubmittingAction, setIsSubmittingAction] = useState(false);
 
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean;
         type: 'delete' | 'toggle';
-        uuid?: string;
-        name?: string;
-        isActive?: boolean;
+        student?: StudentWithUser;
     }>({ isOpen: false, type: 'delete' });
 
-    // Carregar classes para o filtro
+    // Carregar turmas para o filtro
     useEffect(() => {
-        const loadClasses = async () => {
-            try {
-                const data = await studentService.getClasses();
-                setClasses(data || []);
-            } catch (error) {
-                console.error('Erro ao carregar classes:', error);
-            }
-        };
-        loadClasses();
+        studentService.getClasses()
+            .then(data => setClasses(data || []))
+            .catch(() => setClasses([]));
     }, []);
 
-    const loadStudents = async () => {
+    // Ignora respostas antigas quando os filtros mudam depressa
+    const requestId = useRef(0);
+
+    const loadStudents = useCallback(async (): Promise<StudentWithUser[]> => {
+        const current = ++requestId.current;
         try {
             startLoading();
             const response = await studentService.getAll({
                 ...filters,
-                search: searchTerm || undefined,
+                search: debouncedSearch || undefined,
             });
-            const dataArray = response?.data || [];
-            setStudents(dataArray.map((s: any) => ({
-                ...s,
-                isActive: isActiveBoolean(s.isActive)
-            })));
-            setTotal(response?.total || 0);
-        } catch (error: any) {
-            console.error('Erro ao carregar estudantes:', error);
-            showError('Erro', 'Não foi possível carregar os estudantes');
+            if (current !== requestId.current) return [];
+            const list = response.data.map(s => ({ ...s, isActive: isActiveBoolean(s.isActive) }));
+            setStudents(list);
+            setTotal(response.total);
+            setTotalPages(Math.max(1, response.totalPages));
+            // página vazia depois de excluir o último da página: recua uma
+            if (list.length === 0 && (filters.page ?? 1) > 1) {
+                setFilters(prev => ({ ...prev, page: Math.max(1, (prev.page ?? 1) - 1) }));
+            }
+            return list;
+        } catch (error) {
+            if (current !== requestId.current) return [];
+            showError('Erro', getApiErrorMessage(error, 'Não foi possível carregar os estudantes'));
             setStudents([]);
             setTotal(0);
+            return [];
         } finally {
             stopLoading();
+            if (current === requestId.current) setLoaded(true);
         }
-    };
+    }, [filters, debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         loadStudents();
-    }, [filters.page, filters.limit, filters.isActive, filters.gender, filters.classUuid]);
+    }, [loadStudents]);
 
-    const handleSearch = () => {
-        setFilters({ ...filters, page: 1 });
-        loadStudents();
-    };
+    // Nova pesquisa volta à primeira página
+    useEffect(() => {
+        setFilters(prev => (prev.page === 1 ? prev : { ...prev, page: 1 }));
+    }, [debouncedSearch]);
+
+    const updateFilters = (changes: Partial<StudentFilters>) =>
+        setFilters(prev => ({ ...prev, ...changes, page: 1 }));
+
+    // Recarrega a lista e a ficha aberta nos detalhes (a turma vem da lista)
+    const refresh = useCallback(async () => {
+        const list = await loadStudents();
+        if (!detailsStudent) return;
+        const fromList = list.find(item => item.uuid === detailsStudent.uuid);
+        if (fromList) {
+            setDetailsStudent(fromList);
+            return;
+        }
+        try {
+            const fresh = await studentService.getByUuid(detailsStudent.uuid);
+            setDetailsStudent({ ...fresh, currentEnrollment: detailsStudent.currentEnrollment, isActive: isActiveBoolean(fresh.isActive) });
+        } catch {
+            setDetailsStudent(null);
+        }
+    }, [loadStudents, detailsStudent]);
 
     const handleCreate = () => {
-        setSelectedStudent(null);
+        setEditingStudent(null);
         setIsModalOpen(true);
     };
 
+    // Ações rápidas do painel: /...?new=1 abre logo o formulário
+    useEffect(() => {
+        if (new URLSearchParams(window.location.search).get('new') === '1') {
+            window.history.replaceState(null, '', window.location.pathname);
+            handleCreate();
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
     const handleViewDetails = (student: StudentWithUser) => {
-        setSelectedStudent(student);
-        setIsDetailsOpen(true);
+        setDetailsStudent(student);
     };
 
     const handleEdit = (student: StudentWithUser) => {
-        setSelectedStudent(student);
-        setIsDetailsOpen(false);
+        setEditingStudent(student);
         setIsModalOpen(true);
     };
 
+    const closeForm = () => {
+        setIsModalOpen(false);
+        setEditingStudent(null);
+    };
+
     const handleDelete = (student: StudentWithUser) => {
-        setConfirmDialog({
-            isOpen: true,
-            type: 'delete',
-            uuid: student.uuid,
-            name: student.fullName,
-        });
+        setConfirmDialog({ isOpen: true, type: 'delete', student });
     };
 
     const handleToggleActive = (student: StudentWithUser) => {
-        setConfirmDialog({
-            isOpen: true,
-            type: 'toggle',
-            uuid: student.uuid,
-            name: student.fullName,
-            isActive: student.isActive,
-        });
+        setConfirmDialog({ isOpen: true, type: 'toggle', student });
     };
 
     const handleConfirmAction = async () => {
-        const { type, uuid, name, isActive } = confirmDialog;
+        const { type, student } = confirmDialog;
+        if (!student) return;
         try {
+            setIsSubmittingAction(true);
             startLoading();
             if (type === 'delete') {
-                await studentService.remove(uuid!);
-                showSuccess('Estudante excluído', `Estudante ${name} foi removido`);
-            } else if (type === 'toggle') {
-                await studentService.toggleStatus(uuid!, !isActive);
-                const newStatus = isActive ? 'desativado' : 'ativado';
-                showSuccess(`Estudante ${newStatus}`, `Estudante ${name} foi ${newStatus}`);
+                await studentService.remove(student.uuid);
+                showSuccess('Estudante excluído', `${student.fullName} foi removido.`);
+                if (detailsStudent?.uuid === student.uuid) setDetailsStudent(null);
+                setConfirmDialog({ isOpen: false, type: 'delete' });
+                await loadStudents();
+            } else {
+                await studentService.toggleStatus(student.uuid, !student.isActive);
+                const newStatus = student.isActive ? 'desativado' : 'ativado';
+                showSuccess(
+                    `Estudante ${newStatus}`,
+                    student.user
+                        ? `${student.fullName} foi ${newStatus}; o acesso ao portal acompanha o estado.`
+                        : `${student.fullName} foi ${newStatus}.`
+                );
+                setConfirmDialog({ isOpen: false, type: 'delete' });
+                await refresh();
             }
-            setConfirmDialog({ isOpen: false, type: 'delete' });
-            loadStudents();
-        } catch (error: any) {
-            console.error('Erro:', error);
-            showError('Erro', error.response?.data?.message || 'Ocorreu um erro');
+        } catch (error) {
+            showError('Erro', getApiErrorMessage(error, 'Ocorreu um erro'));
         } finally {
+            setIsSubmittingAction(false);
             stopLoading();
         }
     };
 
-    const formatDate = (date: string) => {
-        if (!date) return 'N/A';
-        return new Date(date).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
-    };
+    const formatDate = (date?: string | null) => formatDisplayDate(date);
 
     const columns = [
         {
@@ -245,7 +279,7 @@ export default function StudentsPage() {
             render: (item: StudentWithUser) => (
                 <div className={styles.classCell}>
                     <GraduationCap size={14} />
-                    <span>Turma {item.currentEnrollment?.class?.name || '-'} - {item.currentEnrollment?.grade?.name || '-'}</span>
+                    <span>{item.currentEnrollment ? `${item.currentEnrollment.grade?.name} · Turma ${item.currentEnrollment.class?.name}` : 'Sem matrícula ativa'}</span>
                 </div>
             ),
         },
@@ -276,7 +310,7 @@ export default function StudentsPage() {
         },
         {
             key: 'status',
-            header: 'Status',
+            header: 'Estado',
             render: (item: StudentWithUser) => getStatusBadge(item.isActive),
         },
         {
@@ -293,7 +327,7 @@ export default function StudentsPage() {
                     >
                         <Eye size={16} className={styles.actionView} />
                     </button>
-                    <button
+                    {canUpdate && (<button
                         className={styles.actionButton}
                         onClick={() => handleToggleActive(item)}
                         title={item.isActive ? 'Desativar' : 'Ativar'}
@@ -303,46 +337,50 @@ export default function StudentsPage() {
                         ) : (
                             <Power size={16} className={styles.actionActive} />
                         )}
-                    </button>
-                    <button
+                    </button>)}
+                    {canUpdate && (<button
                         className={styles.actionButton}
                         onClick={() => handleEdit(item)}
                         title="Editar"
                     >
                         <Edit size={16} />
-                    </button>
-                    <button
+                    </button>)}
+                    {canDelete && (<button
                         className={styles.actionButton}
                         onClick={() => handleDelete(item)}
                         title="Excluir"
                     >
                         <Trash2 size={16} className={styles.actionDanger} />
-                    </button>
+                    </button>)}
                 </div>
             ),
         },
     ];
 
-    const EmptyState = () => (
+    const hasActiveFilters = !!debouncedSearch || filters.isActive !== undefined || !!filters.gender || !!filters.classUuid;
+
+    const renderEmptyState = () => (
         <div className={styles.emptyState}>
             <div className={styles.emptyIconWrapper}>
                 <Users size={48} className={styles.emptyIcon} />
             </div>
             <h3 className={styles.emptyTitle}>Nenhum estudante</h3>
             <p className={styles.emptySubtext}>
-                {searchTerm || filters.isActive !== undefined || filters.gender || filters.classUuid
-                    ? 'Tente ajustar seus filtros para encontrar o que procura'
-                    : 'Comece cadastrando um estudante'}
+                {hasActiveFilters
+                    ? 'Tente ajustar os filtros para encontrar o que procura'
+                    : 'Comece por registar um estudante'}
             </p>
-            <Button icon={<Plus size={18} />} onClick={handleCreate}>
-                Novo Estudante
-            </Button>
+            {canCreate && !hasActiveFilters && (
+                <Button icon={<Plus size={18} />} onClick={handleCreate}>
+                    Novo Estudante
+                </Button>
+            )}
         </div>
     );
 
     const renderCardsView = () => {
         const items = Array.isArray(students) ? students : [];
-        if (items.length === 0) return <EmptyState />;
+        if (items.length === 0) return renderEmptyState();
 
         return (
             <div className={styles.cardsGrid}>
@@ -370,7 +408,7 @@ export default function StudentsPage() {
                                 >
                                     <Eye size={16} className={styles.actionView} />
                                 </button>
-                                <button
+                                {canUpdate && (<button
                                     className={styles.iconButton}
                                     onClick={() => handleToggleActive(student)}
                                     title={student.isActive ? 'Desativar' : 'Ativar'}
@@ -380,21 +418,21 @@ export default function StudentsPage() {
                                     ) : (
                                         <Power size={16} className={styles.actionActive} />
                                     )}
-                                </button>
-                                <button
+                                </button>)}
+                                {canUpdate && (<button
                                     className={styles.iconButton}
                                     onClick={() => handleEdit(student)}
                                     title="Editar"
                                 >
                                     <Edit size={16} />
-                                </button>
-                                <button
+                                </button>)}
+                                {canDelete && (<button
                                     className={styles.iconButton}
                                     onClick={() => handleDelete(student)}
                                     title="Excluir"
                                 >
                                     <Trash2 size={16} className={styles.actionDanger} />
-                                </button>
+                                </button>)}
                             </div>
                         </div>
 
@@ -429,11 +467,11 @@ export default function StudentsPage() {
                                     <span className={styles.infoLabel}>Data de Admissão</span>
                                     <span className={styles.infoValue}>
                                         <Calendar size={14} />
-                                        {student.admissionDate}
+                                        {formatDate(student.admissionDate)}
                                     </span>
                                 </div>
                                 <div className={styles.infoItem}>
-                                    <span className={styles.infoLabel}>Usuário</span>
+                                    <span className={styles.infoLabel}>Utilizador</span>
                                     <span className={styles.infoValue}>
                                         {student.user ? (
                                             <span className={styles.hasUser}>
@@ -441,7 +479,7 @@ export default function StudentsPage() {
                                                 {student.user.username}
                                             </span>
                                         ) : (
-                                            <span className={styles.noUser}>Sem usuário</span>
+                                            <span className={styles.noUser}>Sem acesso</span>
                                         )}
                                     </span>
                                 </div>
@@ -454,7 +492,7 @@ export default function StudentsPage() {
                             </div>
                             <span className={styles.cardDate}>
                                 <Clock size={12} />
-                                Criado em {formatDate(student.createdAt)}
+                                Registado em {formatDate(student.createdAt)}
                             </span>
                         </div>
                     </div>
@@ -465,7 +503,7 @@ export default function StudentsPage() {
 
     const renderTableView = () => {
         const items = Array.isArray(students) ? students : [];
-        if (items.length === 0) return <EmptyState />;
+        if (items.length === 0) return renderEmptyState();
 
         return (
             <div className={styles.tableContainer}>
@@ -478,13 +516,13 @@ export default function StudentsPage() {
         );
     };
 
-    if (isLoading && students.length === 0) {
+    if (!loaded) {
         return (
             <div className={styles.page}>
                 <div className={styles.header}>
                     <div>
                         <h1 className={styles.title}>Estudantes</h1>
-                        <p className={styles.subtitle}>Carregando...</p>
+                        <p className={styles.subtitle}>A carregar...</p>
                     </div>
                 </div>
                 <div className={styles.toolbar}>
@@ -515,11 +553,13 @@ export default function StudentsPage() {
                     </div>
                     <span className={styles.totalCount}>{total} estudantes</span>
                 </div>
-                <div className={styles.headerActions}>
-                    <Button icon={<Plus size={18} />} onClick={handleCreate} className={styles.createButton}>
-                        Novo Estudante
-                    </Button>
-                </div>
+                {canCreate && (
+                    <div className={styles.headerActions}>
+                        <Button icon={<Plus size={18} />} onClick={handleCreate} className={styles.createButton}>
+                            Novo Estudante
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Toolbar */}
@@ -529,10 +569,10 @@ export default function StudentsPage() {
                         <Search size={16} className={styles.searchIcon} />
                         <input
                             type="text"
-                            placeholder="Pesquisar estudantes..."
+                            placeholder="Pesquisar por nome ou nº de estudante..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            aria-label="Pesquisar estudantes"
                             className={styles.searchInput}
                         />
                     </div>
@@ -577,19 +617,19 @@ export default function StudentsPage() {
                         <div className={styles.filterOptions}>
                             <button
                                 className={`${styles.filterChip} ${filters.gender === undefined ? styles.active : ''}`}
-                                onClick={() => setFilters({ ...filters, gender: undefined })}
+                                onClick={() => updateFilters({ gender: undefined })}
                             >
                                 Todos
                             </button>
                             <button
                                 className={`${styles.filterChip} ${filters.gender === 'MALE' ? styles.active : ''}`}
-                                onClick={() => setFilters({ ...filters, gender: 'MALE' })}
+                                onClick={() => updateFilters({ gender: 'MALE' })}
                             >
                                 Masculino
                             </button>
                             <button
                                 className={`${styles.filterChip} ${filters.gender === 'FEMALE' ? styles.active : ''}`}
-                                onClick={() => setFilters({ ...filters, gender: 'FEMALE' })}
+                                onClick={() => updateFilters({ gender: 'FEMALE' })}
                             >
                                 Feminino
                             </button>
@@ -600,7 +640,7 @@ export default function StudentsPage() {
                         <label className={styles.filterLabel}>Turma</label>
                         <Select
                             value={filters.classUuid || ''}
-                            onChange={(e) => setFilters({ ...filters, classUuid: e.target.value || undefined })}
+                            onChange={(e) => updateFilters({ classUuid: e.target.value || undefined })}
                             options={[
                                 { value: '', label: 'Todas as turmas' },
                                 ...classes.map(c => ({ value: c.uuid, label: `${c.name} - ${c.gradeName}` })),
@@ -610,23 +650,23 @@ export default function StudentsPage() {
                     </div>
 
                     <div className={styles.filterGroup}>
-                        <label className={styles.filterLabel}>Status</label>
+                        <label className={styles.filterLabel}>Estado</label>
                         <div className={styles.filterOptions}>
                             <button
                                 className={`${styles.filterChip} ${filters.isActive === undefined ? styles.active : ''}`}
-                                onClick={() => setFilters({ ...filters, isActive: undefined })}
+                                onClick={() => updateFilters({ isActive: undefined })}
                             >
                                 Todos
                             </button>
                             <button
                                 className={`${styles.filterChip} ${filters.isActive === true ? styles.active : ''}`}
-                                onClick={() => setFilters({ ...filters, isActive: true })}
+                                onClick={() => updateFilters({ isActive: true })}
                             >
                                 Ativos
                             </button>
                             <button
                                 className={`${styles.filterChip} ${filters.isActive === false ? styles.active : ''}`}
-                                onClick={() => setFilters({ ...filters, isActive: false })}
+                                onClick={() => updateFilters({ isActive: false })}
                             >
                                 Inativos
                             </button>
@@ -638,6 +678,18 @@ export default function StudentsPage() {
             {/* Content */}
             <div className={styles.content}>
                 {viewMode === 'cards' ? renderCardsView() : renderTableView()}
+                {total > 0 && (
+                    <Pagination
+                        page={filters.page || 1}
+                        totalPages={totalPages}
+                        total={total}
+                        limit={filters.limit || 10}
+                        onPageChange={(page) => setFilters(prev => ({ ...prev, page }))}
+                        onLimitChange={(limit) => updateFilters({ limit })}
+                        itemLabel="estudantes"
+                        disabled={isLoading}
+                    />
+                )}
             </div>
 
             {/* Confirm Dialog */}
@@ -648,77 +700,58 @@ export default function StudentsPage() {
                 title={
                     confirmDialog.type === 'delete'
                         ? 'Excluir Estudante'
-                        : confirmDialog.isActive
+                        : confirmDialog.student?.isActive
                             ? 'Desativar Estudante'
                             : 'Ativar Estudante'
                 }
                 message={
                     confirmDialog.type === 'delete'
-                        ? `Tem certeza que deseja excluir o estudante "${confirmDialog.name}"?`
-                        : confirmDialog.isActive
-                            ? `Tem certeza que deseja desativar o estudante "${confirmDialog.name}"?`
-                            : `Tem certeza que deseja ativar o estudante "${confirmDialog.name}"?`
+                        ? `Tem a certeza que deseja excluir o estudante "${confirmDialog.student?.fullName}"? O acesso ao portal também deixa de funcionar.`
+                        : confirmDialog.student?.isActive
+                            ? `Tem a certeza que deseja desativar o estudante "${confirmDialog.student?.fullName}"?${confirmDialog.student?.user ? ' O acesso ao portal também fica desativado.' : ''}`
+                            : `Tem a certeza que deseja ativar o estudante "${confirmDialog.student?.fullName}"?${confirmDialog.student?.user ? ' O acesso ao portal volta a ficar ativo.' : ''}`
                 }
                 type={confirmDialog.type === 'delete' ? 'danger' : 'warning'}
                 confirmText={
                     confirmDialog.type === 'delete'
                         ? 'Excluir'
-                        : confirmDialog.isActive
+                        : confirmDialog.student?.isActive
                             ? 'Desativar'
                             : 'Ativar'
                 }
-                isLoading={isLoading}
+                isLoading={isSubmittingAction}
             />
 
-            {/* Modal de Edição */}
+            {/* Formulário */}
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setSelectedStudent(null);
-                }}
-                title={selectedStudent ? 'Editar Estudante' : 'Novo Estudante'}
+                onClose={closeForm}
+                title={editingStudent ? 'Editar Estudante' : 'Novo Estudante'}
                 size="lg"
             >
-                <StudentForm
-                    student={selectedStudent}
-                    onSuccess={() => {
-                        setIsModalOpen(false);
-                        setSelectedStudent(null);
-                        loadStudents();
-                    }}
-                    onCancel={() => {
-                        setIsModalOpen(false);
-                        setSelectedStudent(null);
-                    }}
-                />
+                {isModalOpen && (
+                    <StudentForm
+                        key={editingStudent?.uuid ?? 'new'}
+                        student={editingStudent}
+                        onSuccess={() => {
+                            closeForm();
+                            refresh();
+                        }}
+                        onCancel={closeForm}
+                    />
+                )}
             </Modal>
 
-            {/* ✅ Modal de Detalhes */}
+            {/* Detalhes */}
             <StudentDetails
-                student={selectedStudent}
-                isOpen={isDetailsOpen}
-                onClose={() => {
-                    setIsDetailsOpen(false);
-                    setSelectedStudent(null);
-                }}
-                onEdit={() => {
-                    if (selectedStudent) {
-                        handleEdit(selectedStudent);
-                    }
-                }}
-                onToggleStatus={() => {
-                    if (selectedStudent) {
-                        handleToggleActive(selectedStudent);
-                        setIsDetailsOpen(false);
-                    }
-                }}
-                onDelete={() => {
-                    if (selectedStudent) {
-                        handleDelete(selectedStudent);
-                        setIsDetailsOpen(false);
-                    }
-                }}
+                student={detailsStudent}
+                isOpen={!!detailsStudent && !isModalOpen}
+                onClose={() => setDetailsStudent(null)}
+                canManageAccess={canUpdate}
+                onAccessChanged={refresh}
+                onEdit={canUpdate && detailsStudent ? () => handleEdit(detailsStudent) : undefined}
+                onToggleStatus={canUpdate && detailsStudent ? () => handleToggleActive(detailsStudent) : undefined}
+                onDelete={canDelete && detailsStudent ? () => handleDelete(detailsStudent) : undefined}
             />
         </div>
     );

@@ -15,8 +15,7 @@ import {
     FileSpreadsheet,
     School,
     Star,
-    Users,
-} from 'lucide-react';
+    Users, CalendarClock } from 'lucide-react';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useToast } from '@/shared/contexts/ToastContext';
 import { getApiErrorMessage } from '@/shared/utils/api.utils';
@@ -193,6 +192,13 @@ export const TeacherDashboard: React.FC = () => {
                     <span>
                         <span className={styles.quickTitle}>Minhas turmas</span>
                         <span className={styles.quickText}>Turmas e alunos</span>
+                    </span>
+                </Link>
+                <Link href="/academic/my-schedule" className={styles.quickCard}>
+                    <span className={`${styles.quickIcon} ${styles.qGreen}`}><CalendarClock size={22} /></span>
+                    <span>
+                        <span className={styles.quickTitle}>O meu horário</span>
+                        <span className={styles.quickText}>Aulas da semana</span>
                     </span>
                 </Link>
                 <Link href="/academic/assessments" className={styles.quickCard}>

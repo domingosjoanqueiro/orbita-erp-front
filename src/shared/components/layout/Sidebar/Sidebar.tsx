@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  CalendarClock,
+  Settings2,
   Users,
   GraduationCap,
   School,
@@ -88,6 +90,7 @@ import {
   Info,
   LifeBuoy,
   House,
+  FileBarChart,
 } from 'lucide-react';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { usePlatformAuth } from '@/shared/contexts/PlatformAuthContext';
@@ -127,8 +130,11 @@ interface MenuGroup {
 const mainMenuItems: MenuItem[] = [
   { icon: <LayoutDashboard size={18} />, label: 'Dashboard', href: '/dashboard', companyOnly: true },
   { icon: <School size={18} />, label: 'Minhas Turmas', href: '/academic/my-classes', companyOnly: true, teacherOnly: true },
+  { icon: <CalendarClock size={18} />, label: 'O meu horário', href: '/academic/my-schedule', companyOnly: true, teacherOnly: true },
+  { icon: <CalendarDays size={18} />, label: 'As minhas férias', href: '/hr/my-leaves', companyOnly: true, teacherOnly: true },
   { icon: <House size={18} />, label: 'Dashboard', href: '/super-admin', badge: 'Admin', platformOnly: true },
-  { icon: <Calendar size={18} />, label: 'Calendário', href: '/calendar', hideForTeacher: true },
+  { icon: <Calendar size={18} />, label: 'Calendário', href: '/calendar', companyOnly: true },
+  { icon: <FileBarChart size={18} />, label: 'Relatórios', href: '/reports', companyOnly: true, hideForTeacher: true, permissions: ['students.read', 'attendance.read', 'gradebooks.read', 'finance.read', 'hr.read'] },
   { icon: <Bell size={18} />, label: 'Notificações', href: '/notifications', companyOnly: true },
 ];
 
@@ -143,6 +149,7 @@ const academicConfigItems: MenuItem[] = [
   { icon: <BookMarked size={18} />, label: 'Disciplinas', href: '/academic/subjects', companyOnly: true, permissions: ['subjects.read'], hideForTeacher: true },
   { icon: <BookOpen size={18} />, label: 'Plano Currícular', href: '/academic/grade-subjects', companyOnly: true, permissions: ['gradeSubjects.read'], hideForTeacher: true },
   { icon: <BarChart3 size={18} />, label: 'Regras de Avaliação', href: '/academic/assessment-rules', companyOnly: true, permissions: ['assessmentRules.read'], hideForTeacher: true },
+  { icon: <Settings2 size={18} />, label: 'Tempos e Salas', href: '/academic/schedule-settings', companyOnly: true, permissions: ['schedules.read'], hideForTeacher: true },
 
 ];
 
@@ -152,6 +159,7 @@ const academicManagementItems: MenuItem[] = [
   { icon: <UserCheck size={18} />, label: 'Professores', href: '/academic/teachers', companyOnly: true, permissions: ['teachers.read'], hideForTeacher: true },
   { icon: <ClipboardList size={18} />, label: 'Matrículas', href: '/academic/enrollments', companyOnly: true, permissions: ['enrollments.read'] },
   { icon: <Briefcase size={18} />, label: 'Atribuições', href: '/academic/teacher-assignments', companyOnly: true, permissions: ['teacherAssignments.read'] },
+  { icon: <CalendarClock size={18} />, label: 'Horários', href: '/academic/schedules', companyOnly: true, permissions: ['schedules.read'], hideForTeacher: true },
 ];
 
 // Acadêmico - Avaliação
@@ -164,21 +172,21 @@ const academicAssessmentItems: MenuItem[] = [
 
 // Financeiro
 const financialItems: MenuItem[] = [
-  { icon: <Wallet size={18} />, label: 'Financeiro', href: '/financial', companyOnly: true, hideForTeacher: true },
-  { icon: <DollarSign size={18} />, label: 'Contas a Receber', href: '/receivables', companyOnly: true, hideForTeacher: true },
-  { icon: <CreditCard size={18} />, label: 'Contas a Pagar', href: '/payables', companyOnly: true, hideForTeacher: true },
-  { icon: <Landmark size={18} />, label: 'Bancos', href: '/banks', companyOnly: true, hideForTeacher: true },
-  { icon: <Coins size={18} />, label: 'Categorias', href: '/categories', companyOnly: true, hideForTeacher: true },
-  { icon: <TrendingUp size={18} />, label: 'Relatórios', href: '/financial-reports', companyOnly: true, hideForTeacher: true },
+  { icon: <Wallet size={18} />, label: 'Painel financeiro', href: '/finance', companyOnly: true, hideForTeacher: true, permissions: ['finance.read'] },
+  { icon: <Coins size={18} />, label: 'Caixa', href: '/finance/cashier', companyOnly: true, hideForTeacher: true, permissions: ['finance.read'] },
+  { icon: <DollarSign size={18} />, label: 'Cobranças', href: '/finance/charges', companyOnly: true, hideForTeacher: true, permissions: ['finance.read'] },
+  { icon: <FileText size={18} />, label: 'Recibos', href: '/finance/payments', companyOnly: true, hideForTeacher: true, permissions: ['finance.read'] },
+  { icon: <TrendingUp size={18} />, label: 'Devedores', href: '/finance/debtors', companyOnly: true, hideForTeacher: true, permissions: ['finance.read'] },
+  { icon: <Landmark size={18} />, label: 'Propinas', href: '/finance/fees', companyOnly: true, hideForTeacher: true, permissions: ['finance.read'] },
+  { icon: <CreditCard size={18} />, label: 'Despesas', href: '/finance/expenses', companyOnly: true, hideForTeacher: true, permissions: ['finance.read'] },
 ];
 
 // RH
 const hrItems: MenuItem[] = [
-  { icon: <UserPlus size={18} />, label: 'Funcionários', href: '/employees', companyOnly: true, hideForTeacher: true },
-  { icon: <Clock size={18} />, label: 'Ponto', href: '/attendance-hr', companyOnly: true, hideForTeacher: true },
-  { icon: <CalendarDays size={18} />, label: 'Férias', href: '/leaves', companyOnly: true, hideForTeacher: true },
-  { icon: <Award size={18} />, label: 'Avaliações', href: '/evaluations', companyOnly: true, hideForTeacher: true },
-  { icon: <FileText size={18} />, label: 'Contratos', href: '/contracts', companyOnly: true, hideForTeacher: true },
+  { icon: <BarChart3 size={18} />, label: 'Painel de RH', href: '/hr', companyOnly: true, hideForTeacher: true, permissions: ['hr.read'] },
+  { icon: <UserPlus size={18} />, label: 'Funcionários', href: '/hr/employees', companyOnly: true, hideForTeacher: true, permissions: ['hr.read'] },
+  { icon: <FileText size={18} />, label: 'Contratos', href: '/hr/contracts', companyOnly: true, hideForTeacher: true, permissions: ['hr.read'] },
+  { icon: <CalendarDays size={18} />, label: 'Férias e ausências', href: '/hr/leaves', companyOnly: true, hideForTeacher: true, permissions: ['hr.read'] },
 ];
 
 // Plataforma
@@ -259,7 +267,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const handleLinkClick = () => { if (onMobileClose) onMobileClose(); };
-  const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
+  // os painéis de área só ficam ativos na própria página (não nas subpáginas)
+  const isActive = (href: string) => pathname === href || (!['/finance', '/hr'].includes(href) && !!pathname?.startsWith(`${href}/`));
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev =>
       prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
@@ -389,11 +398,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {!isTeacher && (
                 <>
-                  {!collapsed && <div className={styles.sectionLabel}>Financeiro</div>}
-                  {renderGroup({ id: 'financial', label: 'Financeiro', icon: <Wallet size={16} />, items: financialItems })}
+                  {financialItems.some(isItemVisible) && (
+                    <>
+                      {!collapsed && <div className={styles.sectionLabel}>Financeiro</div>}
+                      {renderGroup({ id: 'financial', label: 'Financeiro', icon: <Wallet size={16} />, items: financialItems })}
+                    </>
+                  )}
 
-                  {!collapsed && <div className={styles.sectionLabel}>Recursos Humanos</div>}
-                  {renderGroup({ id: 'hr', label: 'RH', icon: <UserPlus size={16} />, items: hrItems })}
+                  {hrItems.some(isItemVisible) && (
+                    <>
+                      {!collapsed && <div className={styles.sectionLabel}>Recursos Humanos</div>}
+                      {renderGroup({ id: 'hr', label: 'RH', icon: <UserPlus size={16} />, items: hrItems })}
+                    </>
+                  )}
                 </>
               )}
             </>

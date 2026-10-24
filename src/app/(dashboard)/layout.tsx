@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { Sidebar } from '@/shared/components/layout/Sidebar/Sidebar';
 import { Header } from '@/shared/components/layout/Header/Header';
@@ -15,6 +16,12 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
+  const router = useRouter();
+
+  // Alunos têm o seu próprio portal (layout mobile)
+  useEffect(() => {
+    if (user?.student) router.replace('/student');
+  }, [user, router]);
 
   // Fechar menu mobile quando a tela for redimensionada para desktop
   useEffect(() => {
@@ -37,6 +44,8 @@ export default function DashboardLayout({
 
   // Verificar se está em mobile
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
+
+  if (user?.student) return null;
 
   return (
     <NotificationsProvider>
